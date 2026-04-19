@@ -1,0 +1,42 @@
+{
+  "schema": 1,
+  "source_slug": "slider",
+  "default_title": "Slider",
+  "source_namespace": "stwp",
+  "default_target_namespace": "stwp",
+  "source_category": "st-wp-starter",
+  "target_category_source": "ST_WP_CORE_THEME_PATTERNS.block_category",
+  "required_core_version": ">=1.0.0",
+  "required_php_helpers": [
+    "st_wp_core_get_block_wrapper_attributes",
+    "st_wp_core_generate_img"
+  ],
+  "required_registered_asset_handles": [
+    "plugins.splidejs.core",
+    "plugins.splidejs.splide"
+  ],
+  "npm_dependencies": {
+    "@splidejs/splide": "^4.1.4"
+  },
+  "shared_assets": [
+    {
+      "name": "splidejs",
+      "files": {
+        "assets/scss/styles-register/plugins/splidejs/core.scss": "7bb7d5bb45119bc038505e960a844b445b981a75900587a07f412d677b8f642e",
+        "assets/scripts/scripts-register/plugins/splidejs/splide.min.js": "92d450057992cd6a0e962f8a74dbf00ed95126d19a52bac3fdb3a76622564d54",
+        "assets/css/styles-register/plugins/splidejs/core.min.css": "acd18b4884d16c9b5fc45c1d82c49fcf410a327f8e5e44cd1856eb2a0057f678",
+        "assets/js/scripts-register/plugins/splidejs/splide.min.js": "3972e732704e2008bcfcfba1d8f9f6a986604292bb1c19de61a19d32f56d5684"
+      }
+    }
+  ],
+  "theme_files": [
+    "acf-json/group_stwp_slider.json"
+  ],
+  "replacement_tokens": {
+    "block_name": "stwp/slider",
+    "block_slug": "slider",
+    "block_category": "st-wp-starter",
+    "text_domain": "st-wp-starter",
+    "php_package": "ST_WP_Starter"
+  }
+}

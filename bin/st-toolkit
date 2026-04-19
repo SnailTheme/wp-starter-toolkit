@@ -1,0 +1,33 @@
+#!/usr/bin/env php
+<?php
+/**
+ * ST Toolkit binary.
+ *
+ * Composer installs this file as the `st-toolkit` command. The binary stays
+ * intentionally small; all behavior lives in namespaced classes under /src/.
+ */
+
+declare(strict_types=1);
+
+$autoloaders = array(
+	__DIR__ . '/../vendor/autoload.php',
+	__DIR__ . '/../../../autoload.php',
+);
+
+foreach ( $autoloaders as $autoload ) {
+	if ( is_file( $autoload ) ) {
+		require $autoload;
+		break;
+	}
+}
+
+if ( ! class_exists( SnailTheme\WPStarterToolkit\Application::class ) ) {
+	fwrite(
+		STDERR,
+		"Unable to load snailtheme/wp-starter-toolkit. Run `composer install` in the package or install it through Composer.\n"
+	);
+	exit( 1 );
+}
+
+$application = new SnailTheme\WPStarterToolkit\Application();
+exit( $application->run() );

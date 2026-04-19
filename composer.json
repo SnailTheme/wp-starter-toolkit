@@ -1,0 +1,23 @@
+{
+  "name": "snailtheme/wp-starter-toolkit",
+  "description": "Developer toolkit for updating ST WP Starter core files and installing curated WordPress starter blocks.",
+  "type": "library",
+  "license": "GPL-2.0-or-later",
+  "homepage": "https://www.snailtheme.com/",
+  "require": {
+    "php": ">=8.1",
+    "symfony/console": "^6.4 || ^7.0",
+    "symfony/filesystem": "^6.4 || ^7.0",
+    "symfony/finder": "^6.4 || ^7.0"
+  },
+  "autoload": {
+    "psr-4": {
+      "SnailTheme\\WPStarterToolkit\\": "src/"
+    }
+  },
+  "bin": [
+    "bin/st-toolkit"
+  ],
+  "minimum-stability": "stable",
+  "prefer-stable": true
+}

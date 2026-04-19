@@ -1,0 +1,53 @@
+{
+  "schema": 1,
+  "name": "st-wp-core",
+  "version": "1.0.0",
+  "files_root": "files",
+  "owned_files": [
+    "core/**",
+    "assets/scss/core/**",
+    "assets/scripts/core/**",
+    "assets/css/core/**",
+    "assets/js/core/**"
+  ],
+  "removed_files": [
+    "assets/scss/core-admin.scss",
+    "assets/scripts/core-admin.js",
+    "assets/scripts/core-customizer.js",
+    "assets/css/core-admin.min.css",
+    "assets/js/core-admin.min.js",
+    "assets/js/core-customizer.min.js"
+  ],
+  "replacement_profile": "st-wp-core-theme-patterns",
+  "required_public_helpers": [
+    "st_wp_core_generate_img",
+    "st_wp_core_generate_sprite_svg",
+    "st_wp_core_get_block_wrapper_attributes"
+  ],
+  "checksums": {
+    "assets/css/core/admin.min.css": "098527f1edd74d279883769d490a79d825c15a23045fc5a3de1738814b2aa2f7",
+    "assets/js/core/admin.min.js": "522fe95312b5c768f9ea18f030fa61a447c260a64dc17244d42f99a3634d9e48",
+    "assets/js/core/customizer.min.js": "7f832e93f06ec47c0fbb8761f6735fa70ca15e651585afd5a96f8d2391600902",
+    "assets/scripts/core/admin.js": "5b73f2c44bb0081a64d0afaf077797fcf6d23bff80bf5cae8b8c45cde8de4ee4",
+    "assets/scripts/core/customizer.js": "1b8b796a053906e3e58e44def27eb401e381ac5d399b9db858f95784ec309020",
+    "assets/scss/core/admin.scss": "d4d45e211d0897f837664c0484328f7d28c94ae9154424a5fd2766f5c5896c07",
+    "core/bootstrap.php": "c43fb543dd2f035242c2a0dbf06b54be0de3ae7c20a07253180bea75c23e6ca1",
+    "core/classes/class-st-wp-core-walker-nav-menu.php": "dd296d5666eaa621012c50914c6e3a28b88d828a3306ee6a32b995d81d633f86",
+    "core/core.php": "d7f5a7e3271ab9d0b62de5a4197a1e2f9471b58415a1083d627d11fa73e12f3b",
+    "core/customizer/animatecss.php": "db4904b2fbdb83f8440d5792e4dc470c661bf5d193e3109e5a5e0956e8f2310d",
+    "core/customizer/disable-emojis.php": "6a259e9d5b98c5140635d258445b72692788501ac2564b8b0066abee40fd7f73",
+    "core/customizer/disable-users-rest-api.php": "4e30db6a335268654f3dde202c8360b3c43dcaeeb9373ad812aa4ddbf6d4b195",
+    "core/customizer/disable-wp-version.php": "f4a7a792ee87f55bc3b04a08ae06921b3419976e9ac6e99430f2bda605cbd52b",
+    "core/customizer/html-header-code.php": "ea68ad88f3c4392abb7149576cc2c1b06fd3f1b599402f69bd4f17d2688f6a09",
+    "core/customizer/thumbnail-sizes.php": "0be4450be76da884cbfb251ca682b118bbdb09a8dec4c96e913cffcc61a2fd1e",
+    "core/customizer-functions.php": "669a940ade823e82ce7dae08161478ae84413580658c4d54ce925aed62700929",
+    "core/customizer-runtime.php": "3fff466f03ac43a4f1d258f91f6aef52ece0edf57dad33279e7187227c3af5b9",
+    "core/customizer.php": "9968cb14cadb93e4e18d799b22d86ae9198ed65daba2bef02cf345abb18d9050",
+    "core/debug.php": "45bf2877516f30c440b39a4c5eebb76db799135d2cb873b7385ea5a870169da2",
+    "core/jetpack.php": "b63048900892d933e37468b1badf619f24a5f4756ab61546ff7ae922d04a6135",
+    "core/scripts.php": "315fb24539e9c000ee88c86f1daec39f60637a6437c055bb5b4105e718faeebc",
+    "core/template-functions.php": "e3908d3be086d7e09b9965526ed65ae8b1cc0ae9cdcd0ba6c314c46a94906e8e",
+    "core/template-tags.php": "ac2441b271a7f7d44c3a4c1e28fdb1c684acd5500cba9c520e9a486d9be2f562",
+    "core/woocommerce.php": "d42f148ef26ba4d2c53f6a21544aa07d2c972bd660bead5ace42658582189d1e"
+  }
+}

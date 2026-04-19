@@ -1,0 +1,52 @@
+name: Toolkit Validation
+
+on:
+  push:
+    branches:
+      - main
+      - next
+  pull_request:
+    branches:
+      - main
+      - next
+
+permissions:
+  contents: read
+
+jobs:
+  toolkit:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Set up PHP
+        uses: shivammathur/setup-php@v2
+        with:
+          php-version: '8.2'
+          tools: composer:v2
+
+      - name: Validate composer.json
+        run: composer validate --strict
+
+      - name: Install Composer dependencies
+        run: composer install --prefer-dist --no-progress --no-interaction
+
+      - name: Lint PHP files
+        run: find . -path ./vendor -prune -o -name '*.php' -print0 | xargs -0 -n1 php -l
+
+      - name: Build smoke-test fixture
+        run: |
+          mkdir -p /tmp/st-toolkit-fixture
+          cp -R resources/core/files/core /tmp/st-toolkit-fixture/core
+          printf '%s\n' '/*' 'Theme Name: ST WP Starter Fixture' 'Version: 1.0.0' 'Text Domain: st-wp-starter' '*/' > /tmp/st-toolkit-fixture/style.css
+          printf '%s\n' '{"dependencies":{"@splidejs/splide":"^4.1.4"}}' > /tmp/st-toolkit-fixture/package.json
+
+      - name: Smoke test commands
+        run: |
+          php bin/st-toolkit core:check --theme=/tmp/st-toolkit-fixture
+          php bin/st-toolkit core:update --theme=/tmp/st-toolkit-fixture --dry-run
+          php bin/st-toolkit blocks:list
+          php bin/st-toolkit blocks:install slider hero-slider --theme=/tmp/st-toolkit-fixture --dry-run
+          php bin/st-toolkit doctor --theme=/tmp/st-toolkit-fixture
