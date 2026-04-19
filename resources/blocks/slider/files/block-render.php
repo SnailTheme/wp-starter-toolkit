@@ -31,8 +31,10 @@ if ( ! empty( $block['align'] ) ) {
 // ACF Fields.
 $fields_group   = "stwp-{$block_name}-fields";
 $settings_group = "stwp-{$block_name}-settings";
-$fields         = get_field( $fields_group ) ?: array();
-$settings       = get_field( $settings_group ) ?: array();
+$fields         = get_field( $fields_group );
+$settings       = get_field( $settings_group );
+$fields         = is_array( $fields ) ? $fields : array();
+$settings       = is_array( $settings ) ? $settings : array();
 $style          = $settings[ "{$settings_group}__style" ] ?? 'horizontal';
 $items          = $fields[ "{$fields_group}-items" ] ?? array();
 
