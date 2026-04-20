@@ -48,7 +48,7 @@
     "core/scripts.php": "315fb24539e9c000ee88c86f1daec39f60637a6437c055bb5b4105e718faeebc",
     "core/template-functions.php": "e3908d3be086d7e09b9965526ed65ae8b1cc0ae9cdcd0ba6c314c46a94906e8e",
     "core/template-tags.php": "ac2441b271a7f7d44c3a4c1e28fdb1c684acd5500cba9c520e9a486d9be2f562",
-    "core/tools/normalize-pot.php": "732d0c2ddbd2e1695aeca0aa190e098629ae01615e2a2990b7f8f4885b40fafd",
+    "core/tools/normalize-pot.php": "0060197812a8437f61051b7b589c84abf6f6186b9b70afe2dc0190ed61646971",
     "core/woocommerce.php": "d42f148ef26ba4d2c53f6a21544aa07d2c972bd660bead5ace42658582189d1e"
   }
 }
