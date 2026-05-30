@@ -3,7 +3,7 @@
  * Block installer.
  *
  * Installs a curated block into a namespace-prefixed directory, for example
- * <theme>/blocks/stwp-hero-slider. Shared assets are managed separately so
+ * <theme>/blocks/<namespace>-hero-slider. Shared assets are managed separately so
  * packages like Splide can be reused by multiple blocks.
  */
 

@@ -46,6 +46,10 @@ final class ReplacementEngine {
 		$map = array();
 
 		foreach ( self::SOURCE_THEME_PATTERNS as $key => $source ) {
+			if ( 'block_namespace' === $key ) {
+				continue;
+			}
+
 			$target = $targetPatterns[ $key ] ?? $source;
 
 			if ( $source !== $target ) {
@@ -60,6 +64,14 @@ final class ReplacementEngine {
 		if ( $sourceFunctionBase !== $targetFunctionBase ) {
 			$map[ $sourceFunctionBase ] = $targetFunctionBase;
 		}
+
+		$map = array_merge(
+			$map,
+			$this->namespaceReplacementMap(
+				self::SOURCE_THEME_PATTERNS['block_namespace'],
+				$targetPatterns['block_namespace'] ?? self::SOURCE_THEME_PATTERNS['block_namespace']
+			)
+		);
 
 		return $this->replaceLongestFirst( $contents, $map );
 	}
@@ -86,8 +98,6 @@ final class ReplacementEngine {
 		$sourceSlugSnake = str_replace( '-', '_', $sourceSlug );
 		$targetSlugSnake = str_replace( '-', '_', $destinationSlug );
 
-		$contents = $this->applyThemePatterns( $contents, $targetPatterns );
-
 		$protectedMap = array(
 			$sourceNamespace . '/' . $sourceSlug => '__ST_TOOLKIT_BLOCK_NAME__',
 			$sourceNamespace . '\\/' . $sourceSlug => '__ST_TOOLKIT_BLOCK_JSON_NAME__',
@@ -98,6 +108,7 @@ final class ReplacementEngine {
 		);
 
 		$contents = $this->replaceLongestFirst( $contents, $protectedMap );
+		$contents = $this->applyThemePatterns( $contents, $targetPatterns );
 
 		$map = array(
 			"'" . $sourceNamespace . "/'"          => "'" . $targetNamespace . "/'",
@@ -147,9 +158,39 @@ final class ReplacementEngine {
 				continue;
 			}
 
+			if ( str_starts_with( $search, '{regex}' ) ) {
+				$contents = (string) preg_replace( substr( $search, 7 ), $replace, $contents );
+				continue;
+			}
+
 			$contents = str_replace( $search, $replace, $contents );
 		}
 
 		return $contents;
+	}
+
+	/**
+	 * Build explicit namespace replacements.
+	 *
+	 * The block namespace is intentionally not replaced as a raw word. Source
+	 * strings such as `distwp` can contain the namespace letters by accident, so
+	 * only explicit block namespace forms are transformed.
+	 *
+	 * @return array<string,string>
+	 */
+	private function namespaceReplacementMap( string $sourceNamespace, string $targetNamespace ): array {
+		if ( $sourceNamespace === $targetNamespace ) {
+			return array();
+		}
+
+		$sourceNamespace = preg_quote( $sourceNamespace, '#' );
+
+		return array(
+			'{regex}#([\'"]block_namespace[\'"]\s*(?:=>|:)\s*[\'"])' . $sourceNamespace . '([\'"])#' => '$1' . $targetNamespace . '$2',
+			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '\\\\/#' => $targetNamespace . '\\/',
+			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '/#' => $targetNamespace . '/',
+			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '-#' => $targetNamespace . '-',
+			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '_#' => $targetNamespace . '_',
+		);
 	}
 }

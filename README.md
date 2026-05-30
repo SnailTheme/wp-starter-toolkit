@@ -114,7 +114,7 @@ composer toolkit:blocks-install slider hero-slider -- --yes
 This installs the packaged `slider` block into:
 
 ```text
-<theme>/blocks/stwp-hero-slider/
+<theme>/blocks/<namespace>-hero-slider/
 ```
 
 The installer uses:
@@ -124,6 +124,10 @@ The installer uses:
 - `ST_WP_CORE_THEME_PATTERNS['block_category']` for the block category
 - `ST_WP_CORE_THEME_PATTERNS['text_domain']` for translations
 - stable `st_wp_core_*` helper calls without renaming them
+
+For the source theme, `<namespace>` defaults to `stwp`. Generated themes can
+change that value, and block installs follow the generated theme's configured
+namespace automatically.
 
 ACF local JSON source files can keep readable package keys such as
 `group_stwp_slider` and `field_stwp_slider_fields_group`. During install, the
