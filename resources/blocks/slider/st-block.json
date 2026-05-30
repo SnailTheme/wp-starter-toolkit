@@ -22,7 +22,7 @@
     {
       "name": "splidejs",
       "files": {
-        "assets/scss/styles-register/plugins/splidejs/core.scss": "7bb7d5bb45119bc038505e960a844b445b981a75900587a07f412d677b8f642e",
+        "assets/scss/styles-register/plugins/splidejs/core.scss": "cffd4632cff5bf43ac40ea1a309a512383b3c553b7916a50b2a9bf5cf54febff",
         "assets/scripts/scripts-register/plugins/splidejs/splide.min.js": "92d450057992cd6a0e962f8a74dbf00ed95126d19a52bac3fdb3a76622564d54",
         "assets/css/styles-register/plugins/splidejs/core.min.css": "acd18b4884d16c9b5fc45c1d82c49fcf410a327f8e5e44cd1856eb2a0057f678",
         "assets/js/scripts-register/plugins/splidejs/splide.min.js": "3972e732704e2008bcfcfba1d8f9f6a986604292bb1c19de61a19d32f56d5684"

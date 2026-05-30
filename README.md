@@ -1,16 +1,21 @@
 # ST WP Starter Toolkit
 
-Development toolkit for ST WP Starter based themes.
+Development toolkit for SnailTheme starter-based WordPress themes.
 
 Package identity:
 
 - Composer package: `snailtheme/wp-starter-toolkit`
 - PHP namespace: `SnailTheme\WPStarterToolkit`
 - CLI binary: `st-toolkit`
-- Framework: Symfony Console
+- framework: Symfony Console
 
-The repository can remain private under `snailtheme/wp-starter-toolkit` while the package
-name points toward the SnailTheme organization.
+## Current State
+
+- active development branch: `next`
+- stable branch: `main` is planned for the first stable release
+- repository is public on GitHub
+- the source theme currently consumes this package through Composer VCS as a
+  development dependency
 
 ## Install
 
@@ -57,10 +62,12 @@ Every command supports `--theme` and `--json`. Write commands also support
 
 ## Core Updates
 
-`core:update` reads `ST_WP_CORE_VERSION` and `ST_WP_CORE_THEME_PATTERNS` statically
-from `core/bootstrap.php`. It does not bootstrap WordPress.
+`core:update` reads `ST_WP_CORE_VERSION` and `ST_WP_CORE_THEME_PATTERNS`
+statically from `core/bootstrap.php`. It does not bootstrap WordPress.
 
-The command writes only files declared by `resources/core/st-wp-core-manifest.json`.
+The command writes only files declared by
+`resources/core/st-wp-core-manifest.json`.
+
 Current package-owned paths are:
 
 - `core/**`
@@ -69,7 +76,15 @@ Current package-owned paths are:
 - `assets/css/core/**`
 - `assets/js/core/**`
 
-It never edits `/inc/`, templates, generic theme assets, or `/blocks/`.
+It never edits:
+
+- `/inc/`
+- templates
+- generic theme assets
+- `/blocks/`
+
+The core manifest also tracks checksums for bundled package-owned files so the
+updater can verify what it owns.
 
 ## Block Installs
 
@@ -98,5 +113,18 @@ Shared assets, such as Splide resources, are checksum checked. Missing shared
 assets are added. Changed shared assets are reported as conflicts and require
 `--replace-shared-assets` for non-interactive replacement.
 
-NPM dependencies are reported only. The toolkit does not edit `package.json` and
-does not run `npm install`.
+NPM dependencies are reported only. The toolkit does not edit `package.json`
+and does not run `npm install`.
+
+## Relationship To The Theme
+
+The canonical source theme is `SnailTheme/wp-starter`.
+
+The expected release order is:
+
+1. toolkit stable release
+2. theme stable release
+3. generator stable release
+
+That order avoids shipping a stable theme that still depends on a moving
+toolkit prerelease reference.
