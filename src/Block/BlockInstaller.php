@@ -2,8 +2,9 @@
 /**
  * Block installer.
  *
- * Installs a curated block into <theme>/blocks/<destination>. Shared assets are
- * managed separately so packages like Splide can be reused by multiple blocks.
+ * Installs a curated block into a namespace-prefixed directory, for example
+ * <theme>/blocks/stwp-hero-slider. Shared assets are managed separately so
+ * packages like Splide can be reused by multiple blocks.
  */
 
 declare(strict_types=1);
@@ -46,7 +47,7 @@ final class BlockInstaller {
 	public function plan( ThemeContext $theme, BlockManifest $manifest, string $destinationSlug ): array {
 		$this->assertDestinationSlug( $destinationSlug );
 
-		$destination = 'blocks/' . $destinationSlug;
+		$destination = $this->targetBlockDirectory( $theme, $destinationSlug );
 		$files       = $this->blockFiles( $manifest );
 		$changes     = array();
 
@@ -97,7 +98,7 @@ final class BlockInstaller {
 		bool $replaceSharedAssets = false
 	): array {
 		$plan        = $this->plan( $theme, $manifest, $destinationSlug );
-		$destination = 'blocks/' . $destinationSlug;
+		$destination = $this->targetBlockDirectory( $theme, $destinationSlug );
 
 		if ( ! $plan['core_version_satisfied'] ) {
 			throw new RuntimeException(
@@ -179,6 +180,9 @@ final class BlockInstaller {
 			if ( $this->textFiles->isTextFile( $source ) ) {
 				$contents = (string) file_get_contents( $source );
 				$contents = $this->replacements->applyBlockPatterns( $contents, $manifest->data(), $destinationSlug, $theme->patterns );
+				if ( $this->isAcfJsonPath( $relativePath ) ) {
+					$contents = $this->generateAcfJsonKeys( $contents, $theme, $destinationSlug );
+				}
 				file_put_contents( $target, $contents );
 				continue;
 			}
@@ -207,6 +211,15 @@ final class BlockInstaller {
 		$targetSlugSnake = str_replace( '-', '_', $destinationSlug );
 		$originalPath     = $relativePath;
 
+		if ( $this->isAcfJsonPath( $relativePath ) ) {
+			$sourceGroupKey = pathinfo( $relativePath, PATHINFO_FILENAME );
+			if ( str_starts_with( $sourceGroupKey, 'group_' ) ) {
+				$targetGroupKey = $this->replacements->applyBlockPatterns( $sourceGroupKey, $manifestData, $destinationSlug, $theme->patterns );
+
+				return dirname( $relativePath ) . '/' . $this->generateAcfKey( $targetGroupKey, $theme, $destinationSlug ) . '.json';
+			}
+		}
+
 		$relativePath = str_replace(
 			$sourceNamespace . '_' . $sourceSlugSnake,
 			$targetNamespace . '_' . $targetSlugSnake,
@@ -223,6 +236,111 @@ final class BlockInstaller {
 		}
 
 		return str_replace( $sourceSlug, $destinationSlug, $relativePath );
+	}
+
+	/**
+	 * Build the destination directory used for a block package install.
+	 */
+	private function targetBlockDirectory( ThemeContext $theme, string $destinationSlug ): string {
+		$namespace = trim( $theme->pattern( 'block_namespace', 'stwp' ) );
+		$directory = $namespace ? $namespace . '-' . $destinationSlug : $destinationSlug;
+
+		return 'blocks/' . $directory;
+	}
+
+	/**
+	 * Check whether a package theme file is an ACF local JSON field group.
+	 */
+	private function isAcfJsonPath( string $relativePath ): bool {
+		return str_starts_with( $relativePath, 'acf-json/' ) && str_ends_with( $relativePath, '.json' );
+	}
+
+	/**
+	 * Rewrite symbolic ACF source keys to deterministic ACF-style keys.
+	 *
+	 * The package keeps readable source keys such as `field_stwp_slider_title`.
+	 * Installed blocks receive stable keys shaped like ACF Pro output, such as
+	 * `field_a1b2c3d4e5f67`. Reinstalling the same destination slug generates
+	 * the same keys, which keeps saved field references stable.
+	 */
+	private function generateAcfJsonKeys( string $contents, ThemeContext $theme, string $destinationSlug ): string {
+		$data = json_decode( $contents, true );
+
+		if ( ! is_array( $data ) ) {
+			return $contents;
+		}
+
+		$keys = array();
+		$this->collectAcfKeys( $data, $keys );
+
+		if ( array() === $keys ) {
+			return $contents;
+		}
+
+		$map = array();
+
+		foreach ( array_unique( $keys ) as $key ) {
+			$map[ $key ] = $this->generateAcfKey( $key, $theme, $destinationSlug );
+		}
+
+		$data = $this->replaceAcfKeyReferences( $data, $map );
+
+		return json_encode( $data, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) . PHP_EOL;
+	}
+
+	/**
+	 * Collect ACF group and field keys from decoded local JSON.
+	 *
+	 * @param mixed    $value Decoded JSON node.
+	 * @param string[] $keys  Collected ACF keys.
+	 */
+	private function collectAcfKeys( mixed $value, array &$keys ): void {
+		if ( is_string( $value ) && 1 === preg_match( '/^(?:group|field)_[A-Za-z0-9_-]+$/', $value ) ) {
+			$keys[] = $value;
+			return;
+		}
+
+		if ( ! is_array( $value ) ) {
+			return;
+		}
+
+		foreach ( $value as $child ) {
+			$this->collectAcfKeys( $child, $keys );
+		}
+	}
+
+	/**
+	 * Replace ACF key values anywhere they are referenced in local JSON.
+	 *
+	 * @param mixed                $value Decoded JSON node.
+	 * @param array<string,string> $map   Source key to generated key map.
+	 * @return mixed
+	 */
+	private function replaceAcfKeyReferences( mixed $value, array $map ): mixed {
+		if ( is_string( $value ) ) {
+			return $map[ $value ] ?? $value;
+		}
+
+		if ( ! is_array( $value ) ) {
+			return $value;
+		}
+
+		foreach ( $value as $key => $child ) {
+			$value[ $key ] = $this->replaceAcfKeyReferences( $child, $map );
+		}
+
+		return $value;
+	}
+
+	/**
+	 * Generate a stable ACF-style key for an installed block destination.
+	 */
+	private function generateAcfKey( string $sourceKey, ThemeContext $theme, string $destinationSlug ): string {
+		$prefix    = str_starts_with( $sourceKey, 'group_' ) ? 'group_' : 'field_';
+		$namespace = $theme->pattern( 'block_namespace', 'stwp' );
+		$seed      = $namespace . '/' . $destinationSlug . '|' . $sourceKey;
+
+		return $prefix . substr( sha1( $seed ), 0, 13 );
 	}
 
 	/**

@@ -99,15 +99,22 @@ st-toolkit blocks:install slider hero-slider --theme=/path/to/theme --yes
 This installs the packaged `slider` block into:
 
 ```text
-<theme>/blocks/hero-slider/
+<theme>/blocks/stwp-hero-slider/
 ```
 
 The installer uses:
 
 - `ST_WP_CORE_THEME_PATTERNS['block_namespace']` for the block namespace
+- the block namespace as the block directory prefix
 - `ST_WP_CORE_THEME_PATTERNS['block_category']` for the block category
 - `ST_WP_CORE_THEME_PATTERNS['text_domain']` for translations
 - stable `st_wp_core_*` helper calls without renaming them
+
+ACF local JSON source files can keep readable package keys such as
+`group_stwp_slider` and `field_stwp_slider_fields_group`. During install, the
+toolkit writes deterministic ACF-style keys and filenames for the destination
+block. That keeps generated field keys unique without changing them on every
+reinstall of the same destination block.
 
 Shared assets, such as Splide resources, are checksum checked. Missing shared
 assets are added. Changed shared assets are reported as conflicts and require
