@@ -37,25 +37,40 @@ composer install
 Core commands:
 
 ```bash
-st-toolkit core:check --theme=/path/to/theme
-st-toolkit core:update --theme=/path/to/theme --dry-run
-st-toolkit core:update --theme=/path/to/theme --yes
-st-toolkit core:rollback --theme=/path/to/theme --yes
+composer toolkit:core-check
+composer toolkit:core-update:dry-run
+composer toolkit:core-update -- --yes
+composer toolkit:core-rollback -- --yes
 ```
 
 Block commands:
 
 ```bash
-st-toolkit blocks:list
-st-toolkit blocks:install slider hero-slider --theme=/path/to/theme --dry-run
-st-toolkit blocks:install slider hero-slider --theme=/path/to/theme --yes
+composer toolkit:blocks-list
+composer toolkit:blocks-install:dry-run slider hero-slider
+composer toolkit:blocks-install slider hero-slider -- --yes
 ```
 
 Diagnostics:
 
 ```bash
-st-toolkit doctor --theme=/path/to/theme
+composer toolkit:doctor
 ```
+
+The starter theme exposes these root Composer scripts around the installed
+toolkit binary. Package developers can still run `./bin/st-toolkit ...` from
+this repository while working directly on the toolkit.
+
+For less-common toolkit commands, the starter theme also exposes a generic
+passthrough:
+
+```bash
+composer st-toolkit -- core:check --theme=/path/to/theme
+composer st-toolkit -- blocks:install slider hero-slider --theme=/path/to/theme --dry-run
+```
+
+Use `--` before toolkit arguments when an option name may also be a Composer
+option, such as `--dry-run`.
 
 Every command supports `--theme` and `--json`. Write commands also support
 `--dry-run` and `--yes`.
@@ -93,7 +108,7 @@ Blocks are installed from `resources/blocks/<block>/st-block.json`.
 Example:
 
 ```bash
-st-toolkit blocks:install slider hero-slider --theme=/path/to/theme --yes
+composer toolkit:blocks-install slider hero-slider -- --yes
 ```
 
 This installs the packaged `slider` block into:
