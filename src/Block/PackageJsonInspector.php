@@ -2,9 +2,9 @@
 /**
  * package.json inspector.
  *
- * Block installation reports missing npm dependencies but never edits
- * package.json and never runs npm install. That keeps the command safe across
- * npm, pnpm, yarn, and CI setups.
+ * Block installation uses this inspector before running npm. It keeps package
+ * detection separate from package installation so dry runs can report exactly
+ * what will happen before files are written.
  */
 
 declare(strict_types=1);

@@ -161,8 +161,10 @@ Shared assets, such as Splide resources, are checksum checked. Missing shared
 assets are added. Changed shared assets are reported as conflicts and require
 `--replace-shared-assets` for non-interactive replacement.
 
-NPM dependencies are reported only. The toolkit does not edit `package.json`
-and does not run `npm install`.
+Missing npm dependencies are installed before files are written when the user
+confirms the install or passes `--yes`. After block files, ACF JSON, and shared
+source assets are written, the toolkit runs `npm run build` so generated assets
+are refreshed.
 
 ## Relationship To The Theme
 

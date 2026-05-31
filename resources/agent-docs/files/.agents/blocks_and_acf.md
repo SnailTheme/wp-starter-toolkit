@@ -76,7 +76,9 @@ Declare front-end and editor assets from `block.json`:
 ```
 
 Shared handles come from the core asset registry. Block-specific files stay
-inside the block directory.
+inside the block directory. If a block package needs a shared library, the
+toolkit can install the shared source assets during `blocks:install`; generated
+shared CSS and JS should come from `npm run build`, not from hand edits.
 
 ## Render Files
 

@@ -97,4 +97,6 @@ you only want the local `AGENTS.md` and `.agents/` guidance refreshed.
 
 Toolkit block installs are separate from core updates and docs updates. Use
 `blocks:install` when you want to copy a curated packaged block into the local
-theme.
+theme. Block installs can also install missing npm dependencies, copy required
+shared source assets, and run `npm run build` when the packaged block declares
+those requirements.

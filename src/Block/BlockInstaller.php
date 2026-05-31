@@ -34,6 +34,7 @@ final class BlockInstaller {
 		private readonly BackupManager $backups = new BackupManager(),
 		private readonly PackagePaths $paths = new PackagePaths(),
 		private readonly PackageJsonInspector $packageJson = new PackageJsonInspector(),
+		private readonly NpmRunner $npm = new NpmRunner(),
 		private readonly PhpValidator $phpValidator = new PhpValidator(),
 		private readonly JsonFile $json = new JsonFile(),
 		private readonly VersionConstraint $versions = new VersionConstraint()
@@ -83,6 +84,9 @@ final class BlockInstaller {
 			'changes'              => $changes,
 			'shared_assets'        => $shared,
 			'missing_dependencies' => $missingDependencies,
+			'npm_install_command'  => array() === $missingDependencies ? '' : $this->npm->installCommand( $missingDependencies ),
+			'build_command'        => $this->npm->buildCommand(),
+			'build_required'       => true,
 		);
 	}
 
