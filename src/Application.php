@@ -17,6 +17,7 @@ use SnailTheme\WPStarterToolkit\Command\CoreCheckCommand;
 use SnailTheme\WPStarterToolkit\Command\CoreRollbackCommand;
 use SnailTheme\WPStarterToolkit\Command\CoreUpdateCommand;
 use SnailTheme\WPStarterToolkit\Command\DoctorCommand;
+use SnailTheme\WPStarterToolkit\Command\InitCommand;
 use Symfony\Component\Console\Application as ConsoleApplication;
 
 /**
@@ -33,6 +34,7 @@ final class Application extends ConsoleApplication {
 		$this->add( new CoreUpdateCommand() );
 		$this->add( new CoreRollbackCommand() );
 		$this->add( new DoctorCommand() );
+		$this->add( new InitCommand() );
 		$this->add( new BlocksListCommand() );
 		$this->add( new BlocksInstallCommand() );
 	}

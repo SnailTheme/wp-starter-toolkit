@@ -54,6 +54,7 @@ composer toolkit:blocks-install slider hero-slider -- --yes
 Diagnostics:
 
 ```bash
+composer st-toolkit init
 composer toolkit:doctor
 ```
 
@@ -74,6 +75,20 @@ option, such as `--dry-run`.
 
 Every command supports `--theme` and `--json`. Write commands also support
 `--dry-run` and `--yes`.
+
+## Init And Agent Docs
+
+`init` installs local development notes into the target theme:
+
+```text
+AGENTS.md
+.agents/
+```
+
+These files are ignored by Git by default. Each managed Markdown file starts
+with a version marker. If the packaged docs version increases, `init` updates
+older managed files. If a developer removes the marker, that file is treated as
+custom and is skipped.
 
 ## Core Updates
 
