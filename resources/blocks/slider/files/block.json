@@ -10,7 +10,9 @@
   "category": "st-wp-starter",
   "icon": "dashicons dashicons-slides",
   "keywords": [
-    "slider, vertical slider, horizontal slider"
+    "slider",
+    "vertical slider",
+    "horizontal slider"
   ],
   "acf": {
     "blockVersion": 3,
