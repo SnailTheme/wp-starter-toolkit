@@ -14,10 +14,22 @@ remain possible.
 - Use templates, assets, and blocks for project-specific output.
 - Keep stable `st_wp_core_*` helpers intact; they are shared core API.
 
+## Project Map
+
+Docs use placeholders for reusable examples:
+
+- `<namespace>` means `ST_WP_CORE_THEME_PATTERNS['block_namespace']`.
+- Current block namespace: `<current_block_namespace>`.
+- `<block-name>` means the block slug without the namespace.
+
+The current namespace line is refreshed by `composer st-toolkit init` or
+`composer toolkit:docs-update`.
+
 ## Focused Guides
 
 - [Core and overrides](.agents/core_and_overrides.md)
 - [Scripts and styles](.agents/scripts_and_styles.md)
+- [Style guidelines](.agents/style_guidelines.md)
 - [Template tags and helpers](.agents/template_tags_and_helpers.md)
 - [Blocks and ACF](.agents/blocks_and_acf.md)
 - [CLI and toolkit](.agents/cli_and_toolkit.md)

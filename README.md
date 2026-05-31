@@ -55,6 +55,7 @@ Diagnostics:
 
 ```bash
 composer st-toolkit init
+composer toolkit:docs-update
 composer toolkit:doctor
 ```
 
@@ -74,7 +75,9 @@ Use `--` before toolkit arguments when an option name may also be a Composer
 option, such as `--dry-run`.
 
 Every command supports `--theme` and `--json`. Write commands also support
-`--dry-run` and `--yes`.
+`--dry-run` and `--yes`. `docs:update` also supports `--force` for refreshing
+current-version managed docs while the package is still on a pre-release
+branch.
 
 ## Init And Agent Docs
 
@@ -89,6 +92,10 @@ These files are ignored by Git by default. Each managed Markdown file starts
 with a version marker. If the packaged docs version increases, `init` updates
 older managed files. If a developer removes the marker, that file is treated as
 custom and is skipped.
+
+`docs:update` refreshes toolkit-managed docs without updating core files or
+installing blocks. Use it when documentation changes but the theme core should
+stay untouched.
 
 ## Core Updates
 

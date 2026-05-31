@@ -6,6 +6,7 @@
     "AGENTS.md",
     ".agents/core_and_overrides.md",
     ".agents/scripts_and_styles.md",
+    ".agents/style_guidelines.md",
     ".agents/template_tags_and_helpers.md",
     ".agents/blocks_and_acf.md",
     ".agents/cli_and_toolkit.md"

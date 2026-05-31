@@ -1,9 +1,9 @@
 <?php
 /**
- * init command.
+ * docs:update command.
  *
- * Installs local-only agent documentation into a theme and ensures those files
- * are ignored by Git.
+ * Refreshes toolkit-managed local agent documentation without updating core
+ * files or installing blocks.
  */
 
 declare(strict_types=1);
@@ -12,18 +12,20 @@ namespace SnailTheme\WPStarterToolkit\Command;
 
 use SnailTheme\WPStarterToolkit\AgentDocs\AgentDocsInstaller;
 use Symfony\Component\Console\Input\InputInterface;
+use Symfony\Component\Console\Input\InputOption;
 use Symfony\Component\Console\Output\OutputInterface;
 
 /**
- * Install toolkit-managed local development notes.
+ * Update toolkit-managed local development notes.
  */
-final class InitCommand extends ToolkitCommand {
-	protected static $defaultName = 'init';
+final class DocsUpdateCommand extends ToolkitCommand {
+	protected static $defaultName = 'docs:update';
 
 	protected function configure(): void {
 		$this
-			->setName( 'init' )
-			->setDescription( 'Install local-only agent docs and ignore rules in the target theme.' );
+			->setName( 'docs:update' )
+			->setDescription( 'Update local-only agent docs in the target theme.' )
+			->addOption( 'force', null, InputOption::VALUE_NONE, 'Refresh current-version managed docs.' );
 
 		$this->addSharedOptions( dryRun: true, yes: true );
 	}
@@ -31,35 +33,36 @@ final class InitCommand extends ToolkitCommand {
 	protected function execute( InputInterface $input, OutputInterface $output ): int {
 		$theme     = $this->theme( $input );
 		$installer = AgentDocsInstaller::create();
+		$force     = (bool) $input->getOption( 'force' );
 
 		if ( (bool) $input->getOption( 'dry-run' ) ) {
-			$result = $installer->plan( $theme );
+			$result = $installer->plan( $theme, $force );
 			$result['dry_run'] = true;
 
 			if ( $this->wantsJson( $input ) ) {
 				return $this->writeJson( $output, $result );
 			}
 
-			$output->writeln( '<info>Toolkit init dry run</info>' );
+			$output->writeln( '<info>Toolkit docs update dry run</info>' );
 			$this->printResult( $output, $result );
 
 			return self::SUCCESS;
 		}
 
-		$plan = $installer->plan( $theme );
+		$plan = $installer->plan( $theme, $force );
 
-		if ( ! $this->confirm( $input, $output, 'Install or update local agent docs in the target theme?' ) ) {
-			$output->writeln( '<comment>Toolkit init cancelled.</comment>' );
+		if ( ! $this->confirm( $input, $output, 'Update local agent docs in the target theme?' ) ) {
+			$output->writeln( '<comment>Toolkit docs update cancelled.</comment>' );
 			return self::SUCCESS;
 		}
 
-		$result = $installer->install( $theme );
+		$result = $installer->install( $theme, $force );
 
 		if ( $this->wantsJson( $input ) ) {
 			return $this->writeJson( $output, $result );
 		}
 
-		$output->writeln( '<info>Toolkit init complete</info>' );
+		$output->writeln( '<info>Toolkit docs update complete</info>' );
 		$this->printResult( $output, $result ?: $plan );
 
 		return self::SUCCESS;

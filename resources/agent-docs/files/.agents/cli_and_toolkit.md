@@ -36,16 +36,26 @@ Public repository:
 
 https://github.com/snailtheme/wp-starter-toolkit
 
-Install or refresh local development notes:
+Install local development notes:
 
 ```bash
 composer st-toolkit init
+composer toolkit:init
+```
+
+Refresh toolkit-managed local development notes without updating core files:
+
+```bash
+composer toolkit:docs-update
+composer toolkit:docs-update -- --force --yes
 ```
 
 Common commands:
 
 ```bash
 composer toolkit:doctor
+composer toolkit:init
+composer toolkit:docs-update
 composer toolkit:core-check
 composer toolkit:core-update:dry-run
 composer toolkit:core-update -- --yes
@@ -81,3 +91,10 @@ Expected update targets:
 
 Do not use toolkit core updates as a way to change project-specific code in
 `/inc/`, templates, generic assets, or local blocks.
+
+Toolkit docs updates are separate from core updates. Use `docs:update` when
+you only want the local `AGENTS.md` and `.agents/` guidance refreshed.
+
+Toolkit block installs are separate from core updates and docs updates. Use
+`blocks:install` when you want to copy a curated packaged block into the local
+theme.

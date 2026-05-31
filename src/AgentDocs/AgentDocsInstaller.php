@@ -46,8 +46,9 @@ final class AgentDocsInstaller {
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function plan( ThemeContext $theme ): array {
-		$changes = array();
+	public function plan( ThemeContext $theme, bool $force = false ): array {
+		$changes        = array();
+		$blockNamespace = $theme->pattern( 'block_namespace', 'stwp' );
 
 		foreach ( $this->manifest->files() as $relativePath ) {
 			$source = $this->sourcePath( $relativePath );
@@ -64,6 +65,9 @@ final class AgentDocsInstaller {
 				} elseif ( version_compare( $installedVersion, $this->manifest->version(), '<' ) ) {
 					$action = 'update';
 					$reason = sprintf( 'version-%s-to-%s', $installedVersion, $this->manifest->version() );
+				} elseif ( $force ) {
+					$action = 'update';
+					$reason = sprintf( 'forced-version-%s', $installedVersion );
 				} else {
 					$action = 'skip';
 					$reason = sprintf( 'version-%s-current', $installedVersion );
@@ -81,6 +85,8 @@ final class AgentDocsInstaller {
 		return array(
 			'theme_path' => $theme->path,
 			'version'    => $this->manifest->version(),
+			'namespace'  => $blockNamespace,
+			'force'      => $force,
 			'manifest'   => $this->manifest->path(),
 			'changes'    => $changes,
 			'gitignore'  => $this->gitignorePlan( $theme ),
@@ -92,8 +98,8 @@ final class AgentDocsInstaller {
 	 *
 	 * @return array<string,mixed>
 	 */
-	public function install( ThemeContext $theme ): array {
-		$plan = $this->plan( $theme );
+	public function install( ThemeContext $theme, bool $force = false ): array {
+		$plan = $this->plan( $theme, $force );
 
 		foreach ( $plan['changes'] as $change ) {
 			if ( ! in_array( $change['action'], array( 'add', 'update' ), true ) ) {
@@ -103,7 +109,7 @@ final class AgentDocsInstaller {
 			$target = $theme->resolve( $change['path'] );
 
 			$this->filesystem->mkdir( dirname( $target ) );
-			$this->filesystem->copy( $change['source'], $target, true );
+			$this->filesystem->dumpFile( $target, $this->renderSource( $change['source'], $theme ) );
 		}
 
 		$this->ensureGitignore( $theme, $plan['gitignore']['missing_lines'] );
@@ -122,6 +128,19 @@ final class AgentDocsInstaller {
 		}
 
 		return $source;
+	}
+
+	/**
+	 * Render install-time placeholders in packaged docs.
+	 */
+	private function renderSource( string $source, ThemeContext $theme ): string {
+		$contents = (string) file_get_contents( $source );
+
+		return str_replace(
+			'<current_block_namespace>',
+			$theme->pattern( 'block_namespace', 'stwp' ),
+			$contents
+		);
 	}
 
 	/**
