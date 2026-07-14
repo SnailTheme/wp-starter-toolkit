@@ -19,6 +19,8 @@ use Symfony\Component\Finder\Finder;
  * Creates and restores toolkit backups.
  */
 final class BackupManager {
+	private const METADATA_FILE = '.st-toolkit-backup.json';
+
 	public function __construct(
 		private readonly Filesystem $filesystem = new Filesystem()
 	) {}
@@ -33,6 +35,7 @@ final class BackupManager {
 
 		$backup = $root . DIRECTORY_SEPARATOR . gmdate( 'Ymd-His' ) . '-' . $type . '-' . bin2hex( random_bytes( 3 ) );
 		$this->filesystem->mkdir( $backup );
+		$this->writeMetadata( $backup, array( 'absent_paths' => array() ) );
 
 		return $backup;
 	}
@@ -41,13 +44,15 @@ final class BackupManager {
 	 * Backup a relative file or directory if it currently exists.
 	 */
 	public function backupPath( string $themePath, string $backupPath, string $relativePath ): void {
-		$source = $themePath . DIRECTORY_SEPARATOR . ltrim( $relativePath, '/\\' );
+		$relativePath = $this->normalizeRelativePath( $relativePath );
+		$source       = $themePath . DIRECTORY_SEPARATOR . $relativePath;
 
 		if ( ! file_exists( $source ) ) {
+			$this->recordAbsentPath( $backupPath, $relativePath );
 			return;
 		}
 
-		$target = $backupPath . DIRECTORY_SEPARATOR . ltrim( $relativePath, '/\\' );
+		$target = $backupPath . DIRECTORY_SEPARATOR . $relativePath;
 		$this->filesystem->mkdir( dirname( $target ) );
 
 		if ( is_dir( $source ) ) {
@@ -68,10 +73,19 @@ final class BackupManager {
 			throw new RuntimeException( 'No toolkit backup found for rollback.' );
 		}
 
+		$metadata = $this->readMetadata( $backupPath );
+
+		foreach ( $metadata['absent_paths'] as $relativePath ) {
+			$this->filesystem->remove(
+				$themePath . DIRECTORY_SEPARATOR . $this->normalizeRelativePath( $relativePath )
+			);
+		}
+
 		$finder = Finder::create()
 			->files()
 			->ignoreDotFiles( false )
 			->notName( '.gitignore' )
+			->notName( self::METADATA_FILE )
 			->in( $backupPath );
 
 		foreach ( $finder as $file ) {
@@ -117,5 +131,78 @@ final class BackupManager {
 	 */
 	public function backupRoot( string $themePath ): string {
 		return $themePath . DIRECTORY_SEPARATOR . '.st-toolkit' . DIRECTORY_SEPARATOR . 'backups';
+	}
+
+	/**
+	 * Record a path that did not exist when the backup was created.
+	 *
+	 * Rollback removes these paths before restoring files. This makes rollback
+	 * exact when an update adds a new package-owned file.
+	 */
+	private function recordAbsentPath( string $backupPath, string $relativePath ): void {
+		$metadata = $this->readMetadata( $backupPath );
+
+		if ( ! in_array( $relativePath, $metadata['absent_paths'], true ) ) {
+			$metadata['absent_paths'][] = $relativePath;
+			sort( $metadata['absent_paths'] );
+			$this->writeMetadata( $backupPath, $metadata );
+		}
+	}
+
+	/**
+	 * Read backup metadata, including compatibility with pre-metadata backups.
+	 *
+	 * @return array{absent_paths:string[]}
+	 */
+	private function readMetadata( string $backupPath ): array {
+		$metadataPath = $backupPath . DIRECTORY_SEPARATOR . self::METADATA_FILE;
+
+		if ( ! is_file( $metadataPath ) ) {
+			return array( 'absent_paths' => array() );
+		}
+
+		$data = json_decode( (string) file_get_contents( $metadataPath ), true );
+
+		if ( ! is_array( $data ) || ! isset( $data['absent_paths'] ) || ! is_array( $data['absent_paths'] ) ) {
+			throw new RuntimeException( sprintf( 'Invalid toolkit backup metadata: %s', $metadataPath ) );
+		}
+
+		return array(
+			'absent_paths' => array_values(
+				array_filter( $data['absent_paths'], 'is_string' )
+			),
+		);
+	}
+
+	/**
+	 * Persist backup metadata without relying on platform-specific shell tools.
+	 *
+	 * @param array{absent_paths:string[]} $metadata Backup state metadata.
+	 */
+	private function writeMetadata( string $backupPath, array $metadata ): void {
+		$encoded = json_encode( $metadata, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES );
+
+		if ( false === $encoded ) {
+			throw new RuntimeException( 'Could not encode toolkit backup metadata.' );
+		}
+
+		$this->filesystem->dumpFile(
+			$backupPath . DIRECTORY_SEPARATOR . self::METADATA_FILE,
+			$encoded . PHP_EOL
+		);
+	}
+
+	/**
+	 * Normalize and validate a theme-relative backup path.
+	 */
+	private function normalizeRelativePath( string $relativePath ): string {
+		$relativePath = str_replace( '\\', '/', ltrim( $relativePath, '/\\' ) );
+		$parts        = explode( '/', $relativePath );
+
+		if ( '' === $relativePath || in_array( '..', $parts, true ) ) {
+			throw new RuntimeException( sprintf( 'Unsafe toolkit backup path: %s', $relativePath ) );
+		}
+
+		return str_replace( '/', DIRECTORY_SEPARATOR, $relativePath );
 	}
 }

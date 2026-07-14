@@ -19,6 +19,9 @@
   "bin": [
     "bin/st-toolkit"
   ],
+  "scripts": {
+    "test:acceptance": "@php tests/acceptance.php"
+  },
   "minimum-stability": "stable",
   "prefer-stable": true
 }

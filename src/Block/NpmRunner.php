@@ -13,12 +13,19 @@ namespace SnailTheme\WPStarterToolkit\Block;
 
 use RuntimeException;
 use SnailTheme\WPStarterToolkit\Theme\ThemeContext;
+use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 
 /**
  * Runs npm commands in a target theme directory.
  */
 final class NpmRunner {
+	private readonly ExecutableFinder $executables;
+
+	public function __construct( ?ExecutableFinder $executables = null ) {
+		$this->executables = $executables ?? new ExecutableFinder();
+	}
+
 	/**
 	 * Install declared npm dependencies.
 	 *
@@ -87,13 +94,26 @@ final class NpmRunner {
 	 * @return array<string,mixed>
 	 */
 	private function run( ThemeContext $theme, array $command ): array {
+		$displayCommand = $this->commandString( $command );
+		$executable     = $this->executables->find( $command[0] );
+
+		if ( null === $executable ) {
+			throw new RuntimeException(
+				sprintf(
+					'Required executable "%s" was not found in PATH. Install Node.js/npm and try again.',
+					$command[0]
+				)
+			);
+		}
+
+		$command[0] = $executable;
 		$process = new Process( $command, $theme->path );
 		$process->setTimeout( null );
 		$process->run();
 
 		$result = array(
 			'status'       => $process->isSuccessful() ? 'completed' : 'failed',
-			'command'      => $this->commandString( $command ),
+			'command'      => $displayCommand,
 			'exit_code'    => $process->getExitCode(),
 			'output'       => trim( $process->getOutput() ),
 			'error_output' => trim( $process->getErrorOutput() ),
