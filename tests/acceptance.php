@@ -103,6 +103,7 @@ try {
 			'https://github.com/SnailTheme/wp-starter',
 			'https://github.com/SnailTheme/wp-starter/',
 			'https://github.com/snailtheme/wp-starter/',
+			'https://github.com/snailtheme/wp-starter/issues',
 			'https://github.com/snailtheme/wp-starter-toolkit.git',
 			'Author: SnailTheme',
 			'Helper: st_wp_core_generate_img',
@@ -114,6 +115,7 @@ try {
 	acceptance_assert( str_contains( $replaced, 'https://github.com/acme-inc/acme-acceptance' ), 'Repository URL was not replaced from git_repo.' );
 	acceptance_assert( str_contains( $replaced, 'https://github.com/acme-inc/acme-acceptance/' ), 'Cased repository URL with a trailing slash was not replaced safely.' );
 	acceptance_assert( str_contains( $replaced, 'https://example.com/acme-acceptance/' ), 'Theme URI was not preserved as a separate pattern.' );
+	acceptance_assert( str_contains( $replaced, 'https://github.com/acme-inc/acme-acceptance/issues' ), 'Lowercase repository URL with a path was replaced as the Theme URI.' );
 	acceptance_assert( str_contains( $replaced, 'https://github.com/snailtheme/wp-starter-toolkit.git' ), 'Toolkit package URL was incorrectly whitelabeled.' );
 	acceptance_assert( ! str_contains( $replaced, 'github.com/Acme Inc' ), 'Author replacement corrupted a GitHub organization path.' );
 	acceptance_assert( str_contains( $replaced, 'st_wp_core_generate_img' ), 'Stable core helper was unexpectedly whitelabeled.' );
