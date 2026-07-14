@@ -46,7 +46,7 @@ final class ReplacementEngine {
 		$map = array();
 
 		foreach ( self::SOURCE_THEME_PATTERNS as $key => $source ) {
-			if ( 'block_namespace' === $key ) {
+			if ( in_array( $key, array( 'block_namespace', 'git_repo', 'github_theme_uri' ), true ) ) {
 				continue;
 			}
 
@@ -64,6 +64,18 @@ final class ReplacementEngine {
 		if ( $sourceFunctionBase !== $targetFunctionBase ) {
 			$map[ $sourceFunctionBase ] = $targetFunctionBase;
 		}
+
+		// Repository URLs must resolve from git_repo before a broad author-name
+		// replacement can turn `/SnailTheme/` into an invalid organization path.
+		$targetRepository = $targetPatterns['git_repo']
+			?? $targetPatterns['github_theme_uri']
+			?? self::SOURCE_THEME_PATTERNS['git_repo'];
+		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?=\.git(?![A-Za-z0-9_.-]))#'] = 'https://github.com/' . $targetRepository;
+		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?![A-Za-z0-9_.-])#'] = 'https://github.com/' . $targetRepository;
+		$map['{regex}#https://github\.com/snailtheme/wp-starter(?=\.git(?![A-Za-z0-9_.-]))#'] = 'https://github.com/' . $targetRepository;
+		$map['{regex}#https://github\.com/snailtheme/wp-starter(?=/[A-Za-z0-9._~%?\#-])#'] = 'https://github.com/' . $targetRepository;
+		$map['{regex}#https://github\.com/snailtheme/wp-starter(?![A-Za-z0-9_./-])#'] = 'https://github.com/' . $targetRepository;
+		$map['{regex}#(?<![A-Za-z0-9_./-])snailtheme/wp-starter(?![A-Za-z0-9_.-])#'] = $targetRepository;
 
 		$map = array_merge(
 			$map,
