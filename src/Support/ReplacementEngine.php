@@ -67,8 +67,10 @@ final class ReplacementEngine {
 
 		// Repository URLs must resolve from git_repo before a broad author-name
 		// replacement can turn `/SnailTheme/` into an invalid organization path.
-		$targetRepository = $targetPatterns['git_repo'] ?? self::SOURCE_THEME_PATTERNS['git_repo'];
-		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?![A-Za-z0-9_./-])#'] = 'https://github.com/' . $targetRepository;
+		$targetRepository = $targetPatterns['git_repo']
+			?? $targetPatterns['github_theme_uri']
+			?? self::SOURCE_THEME_PATTERNS['git_repo'];
+		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?![A-Za-z0-9_.-])#'] = 'https://github.com/' . $targetRepository;
 		$map['{regex}#https://github\.com/snailtheme/wp-starter(?![A-Za-z0-9_./-])#'] = 'https://github.com/' . $targetRepository;
 		$map['{regex}#(?<![A-Za-z0-9_./-])snailtheme/wp-starter(?![A-Za-z0-9_.-])#'] = $targetRepository;
 

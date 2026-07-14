@@ -101,6 +101,7 @@ try {
 		PHP_EOL,
 		array(
 			'https://github.com/SnailTheme/wp-starter',
+			'https://github.com/SnailTheme/wp-starter/',
 			'https://github.com/snailtheme/wp-starter/',
 			'https://github.com/snailtheme/wp-starter-toolkit.git',
 			'Author: SnailTheme',
@@ -111,10 +112,22 @@ try {
 	$replaced          = $replacementEngine->applyThemePatterns( $source, $patterns );
 
 	acceptance_assert( str_contains( $replaced, 'https://github.com/acme-inc/acme-acceptance' ), 'Repository URL was not replaced from git_repo.' );
+	acceptance_assert( str_contains( $replaced, 'https://github.com/acme-inc/acme-acceptance/' ), 'Cased repository URL with a trailing slash was not replaced safely.' );
 	acceptance_assert( str_contains( $replaced, 'https://example.com/acme-acceptance/' ), 'Theme URI was not preserved as a separate pattern.' );
 	acceptance_assert( str_contains( $replaced, 'https://github.com/snailtheme/wp-starter-toolkit.git' ), 'Toolkit package URL was incorrectly whitelabeled.' );
 	acceptance_assert( ! str_contains( $replaced, 'github.com/Acme Inc' ), 'Author replacement corrupted a GitHub organization path.' );
 	acceptance_assert( str_contains( $replaced, 'st_wp_core_generate_img' ), 'Stable core helper was unexpectedly whitelabeled.' );
+
+	$legacyPatterns = $patterns;
+	unset( $legacyPatterns['git_repo'] );
+	$legacyPatterns['github_theme_uri'] = 'legacy-org/legacy-theme';
+	$legacyReplaced = $replacementEngine->applyThemePatterns(
+		"https://github.com/SnailTheme/wp-starter\n'github_theme_uri' => 'snailtheme/wp-starter'\n",
+		$legacyPatterns
+	);
+
+	acceptance_assert( str_contains( $legacyReplaced, 'https://github.com/legacy-org/legacy-theme' ), 'Repository URL did not fall back to github_theme_uri.' );
+	acceptance_assert( str_contains( $legacyReplaced, "'github_theme_uri' => 'legacy-org/legacy-theme'" ), 'Legacy github_theme_uri was reset to the starter repository.' );
 
 	$themePath = $temp . DIRECTORY_SEPARATOR . 'theme';
 	$filesystem->mirror( $root . '/resources/core/files', $themePath );
