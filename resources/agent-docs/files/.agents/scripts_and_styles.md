@@ -95,6 +95,13 @@ Do not enqueue block editor styles with `admin_enqueue_scripts`. Block API v3
 uses an iframe editor canvas, so block editor styles must be loaded through
 `block.json` `editorStyle` or another block-aware API.
 
+Theme-wide editor content styles are registered from `/inc/scripts.php` with
+`add_editor_style()`. WordPress scopes the compiled editor stylesheet to
+`.editor-styles-wrapper`, including root selectors emitted by reset libraries.
+Do not directly enqueue `/assets/css/editor.min.css`: `enqueue_block_assets`
+also loads assets outside the iframe for compatibility, where an unscoped reset
+could alter the surrounding wp-admin interface.
+
 ## Auto-Registered And Auto-Enqueued Assets
 
 The core asset loader watches compiled asset directories:
@@ -132,8 +139,9 @@ Good uses:
 Do not edit `/core/scripts.php` for project behavior.
 
 Use `admin_enqueue_scripts` only for wp-admin UI behavior/assets. Use
-`enqueue_block_assets` with an `is_admin()` guard for post/page editor canvas
-styles so Block API v3 iframe loading stays compatible with WordPress.
+`add_editor_style()` for the theme-wide post/page editor canvas stylesheet.
+Reserve `enqueue_block_assets` for content assets intentionally needed on the
+front end and in the editor, or for narrowly scoped conditional block assets.
 
 ## Installed Components
 

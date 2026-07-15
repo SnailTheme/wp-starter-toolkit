@@ -1,5 +1,9 @@
 /**
  * Tailwind CSS v4 Block API v3 editor entry point.
+ *
+ * WordPress loads the compiled file through `add_editor_style()` and scopes
+ * Tailwind's generated selectors to `.editor-styles-wrapper`, keeping Preflight
+ * and utility rules out of the surrounding wp-admin interface.
  */
 @import "tailwindcss" source("../../");
 

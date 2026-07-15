@@ -4,6 +4,9 @@
  * This file is project-owned and compiles to assets/css/editor.min.css.
  * It mirrors enough front-end styling into the post/page editor so block editor
  * content looks like the theme. Core admin UI styles belong in assets/scss/core/admin.scss.
+ * WordPress loads the compiled file through `add_editor_style()` and scopes
+ * top-level selectors to `.editor-styles-wrapper`, including root selectors
+ * emitted by Normalize and shared theme modules.
  *
  * @package ST_WP_Starter
  */
@@ -18,7 +21,6 @@
 @use "utilities/alignments";
 
 .editor-styles-wrapper {
-	box-sizing: border-box; // Acts as the editor iframe's HTML selector.
 	color: theme.$color__text-main;
 	font-family: theme.$font__main;
 	font-size: 1rem;
