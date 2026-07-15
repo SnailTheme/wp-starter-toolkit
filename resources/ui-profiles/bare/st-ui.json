@@ -1,0 +1,9 @@
+{
+  "slug": "bare",
+  "title": "Bare",
+  "description": "The functional minimum: Normalize, box sizing, responsive media, accessibility helpers, and WordPress alignments.",
+  "version": "1.0.0",
+  "npm_dev_dependencies": {},
+  "css_entries": [],
+  "vite_plugins": []
+}

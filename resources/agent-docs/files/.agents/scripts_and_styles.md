@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Scripts And Styles
 
 ## Source And Build Paths
@@ -32,11 +32,29 @@ Project-owned theme assets are enqueued from `/inc/scripts.php`.
 
 Default source/output pairs:
 
-- `/assets/scss/main.scss` -> `/assets/css/main.min.css`
+- `/assets/scss/main.scss` -> `/assets/css/main.min.css` for Sass profiles
+- `/assets/styles/main.css` -> `/assets/css/main.min.css` for native CSS profiles
 - `/assets/scripts/main.js` -> `/assets/js/main.min.js`
-- `/assets/scss/editor.scss` -> `/assets/css/editor.min.css`
+- `/assets/scss/editor.scss` or `/assets/styles/editor.css` -> `/assets/css/editor.min.css`
 - `/assets/scripts/admin.js` -> `/assets/js/admin.min.js`
-- `/assets/scss/woocommerce.scss` -> `/assets/css/woocommerce.min.css`
+- optional `/assets/scss/woocommerce.scss` -> `/assets/css/woocommerce.min.css`
+
+The active profile and optional native CSS entries are recorded in
+`/st-toolkit.json`. Do not edit that file just to bypass a profile conflict;
+use `composer toolkit:ui-status` and a profile dry run first.
+
+Native CSS entries are source files and must remain outside `/assets/css/`,
+which is a generated output directory deleted before production builds. Use
+`/assets/styles/` or another dedicated source directory for native CSS.
+
+The same `vite.config.js` handles all supported profiles. Bare and Blueprint
+use recursively discovered Sass entries. Tailwind declares native CSS entries
+and `@tailwindcss/vite` through `st-toolkit.json`. Vite reads this build contract
+at startup, so restart `npm run dev` after the one-time UI selection.
+
+`npm run dev` runs Vite in watch mode and writes development source maps.
+`npm run build` runs a clean production build, removes stale outputs, and must
+always be run before committing.
 
 Core-owned asset sources live under:
 
@@ -116,3 +134,11 @@ Do not edit `/core/scripts.php` for project behavior.
 Use `admin_enqueue_scripts` only for wp-admin UI behavior/assets. Use
 `enqueue_block_assets` with an `is_admin()` guard for post/page editor canvas
 styles so Block API v3 iframe loading stays compatible with WordPress.
+
+## Installed Components
+
+Toolkit components place PHP integration below `/inc/components/`, Sass below
+`/assets/scss/components/`, and JavaScript below `/assets/scripts/components/`.
+The package-owned `/core/components.php` loader includes component PHP after
+the required core helpers have booted. Keep component-specific enqueue logic
+with the project-owned component PHP file.

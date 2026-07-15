@@ -9,14 +9,20 @@
 
 declare(strict_types=1);
 
+use SnailTheme\WPStarterToolkit\AgentDocs\AgentDocsInstaller;
+use SnailTheme\WPStarterToolkit\AgentDocs\AgentDocsManifest;
 use SnailTheme\WPStarterToolkit\Block\BlockInstaller;
 use SnailTheme\WPStarterToolkit\Block\BlockManifest;
 use SnailTheme\WPStarterToolkit\Block\NpmRunner;
+use SnailTheme\WPStarterToolkit\Component\ComponentInstaller;
+use SnailTheme\WPStarterToolkit\Component\ComponentManifest;
 use SnailTheme\WPStarterToolkit\Core\CoreUpdater;
 use SnailTheme\WPStarterToolkit\Support\BackupManager;
 use SnailTheme\WPStarterToolkit\Support\ReplacementEngine;
 use SnailTheme\WPStarterToolkit\Theme\ThemeContext;
 use SnailTheme\WPStarterToolkit\Theme\ThemeDetector;
+use SnailTheme\WPStarterToolkit\UI\UIProfileInstaller;
+use SnailTheme\WPStarterToolkit\UI\UIProfileManifest;
 use Symfony\Component\Filesystem\Filesystem;
 
 require dirname( __DIR__ ) . '/vendor/autoload.php';
@@ -150,7 +156,7 @@ try {
 	$bootstrapContents = $replacementEngine->applyThemePatterns( (string) file_get_contents( $bootstrap ), $patterns );
 	$filesystem->dumpFile(
 		$bootstrap,
-		str_replace( "define( 'ST_WP_CORE_VERSION', '1.0.0' );", "define( 'ST_WP_CORE_VERSION', '0.9.0' );", $bootstrapContents )
+		str_replace( "define( 'ST_WP_CORE_VERSION', '1.1.0' );", "define( 'ST_WP_CORE_VERSION', '1.0.0' );", $bootstrapContents )
 	);
 	$filesystem->dumpFile( $coreFile, "<?php\n// Acceptance rollback marker.\n" . substr( (string) file_get_contents( $coreFile ), 6 ) );
 	$filesystem->remove( $themePath . '/core/customizer/animatecss.php' );
@@ -158,33 +164,65 @@ try {
 	$filesystem->dumpFile( $themePath . '/assets/scss/acceptance-sentinel.scss', ".acceptance-sentinel { display: block; }\n" );
 	$filesystem->dumpFile( $themePath . '/acceptance-template.php', "<?php\n// Project template sentinel.\n" );
 	$filesystem->dumpFile( $themePath . '/blocks/stwp-sentinel/block.json', "{\"apiVersion\":3,\"name\":\"stwp/sentinel\"}\n" );
+	$filesystem->dumpFile(
+		$themePath . '/st-toolkit.json',
+		"{\n  \"schema\": 1,\n  \"ui_profile\": \"bare\",\n  \"ui_version\": \"1.0.0\",\n  \"ui_locked\": false,\n  \"css_entries\": [],\n  \"vite_plugins\": [],\n  \"files\": {}\n}\n"
+	);
+	$projectStateBefore = (string) file_get_contents( $themePath . '/st-toolkit.json' );
 	$coreHashesBefore = acceptance_core_hashes( $themePath );
 
-	$theme   = ( new ThemeDetector() )->detect( $themePath );
+	$theme        = ( new ThemeDetector() )->detect( $themePath );
+	$docsManifest = AgentDocsManifest::load();
+
+	acceptance_assert( '1.1.0' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own 1.1.0 content version.' );
+	acceptance_assert( '1.0.0' === $docsManifest->fileVersion( '.agents/template_tags_and_helpers.md' ), 'Unchanged helper guide was unnecessarily versioned as changed.' );
+
+	$filesystem->dumpFile( $themePath . '/AGENTS.md', "<!-- st-toolkit-agent-doc-version: 1.0.0 -->\n# Old Agent Guide\n" );
+	$filesystem->dumpFile(
+		$themePath . '/.agents/template_tags_and_helpers.md',
+		"<!-- st-toolkit-agent-doc-version: 1.0.0 -->\n# Current Helper Guide Sentinel\n"
+	);
+
+	$docsInstaller = new AgentDocsInstaller( $docsManifest );
+	$docsPlan      = $docsInstaller->plan( $theme );
+	$docsChanges   = array_column( $docsPlan['changes'], null, 'path' );
+
+	acceptance_assert( 'update' === $docsChanges['AGENTS.md']['action'], 'Changed agent guide was not planned for update.' );
+	acceptance_assert( '1.1.0' === $docsChanges['AGENTS.md']['target_version'], 'Agent guide plan did not expose its file-specific target version.' );
+	acceptance_assert( 'skip' === $docsChanges['.agents/template_tags_and_helpers.md']['action'], 'Unchanged current-version helper guide was planned for update.' );
+	acceptance_assert( '1.0.0' === $docsChanges['.agents/template_tags_and_helpers.md']['target_version'], 'Helper guide plan used the package-wide version instead of its content version.' );
+
+	$docsInstaller->install( $theme );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/AGENTS.md' ), '1.1.0' ), 'Changed agent guide did not update.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/.agents/template_tags_and_helpers.md' ), 'Current Helper Guide Sentinel' ), 'Unchanged helper guide was rewritten.' );
+
 	$updated = ( new CoreUpdater() )->update( $theme );
 
 	acceptance_assert( is_file( $themePath . '/core/customizer/animatecss.php' ), 'Core update did not add a missing owned file.' );
-	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'1.0.0'" ), 'Core update did not install the packaged version.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'1.1.0'" ), 'Core update did not install the packaged version.' );
+	acceptance_assert( is_file( $themePath . '/core/components.php' ), 'Core update did not install the shared component loader.' );
 	acceptance_assert( is_file( $themePath . '/inc/acceptance-sentinel.php' ), 'Core update touched /inc/.' );
 	acceptance_assert( is_file( $themePath . '/assets/scss/acceptance-sentinel.scss' ), 'Core update touched a generic asset.' );
 	acceptance_assert( is_file( $themePath . '/acceptance-template.php' ), 'Core update touched a template.' );
 	acceptance_assert( is_file( $themePath . '/blocks/stwp-sentinel/block.json' ), 'Core update touched a block.' );
+	acceptance_assert( $projectStateBefore === file_get_contents( $themePath . '/st-toolkit.json' ), 'Core update touched root project/toolkit state.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/core/tools/normalize-pot.php' ), 'https://github.com/acme-inc/acme-acceptance' ), 'Core update corrupted the generated repository URL.' );
 
 	( new BackupManager() )->restoreLatest( $themePath, $updated['backup_path'], 'core' );
 
 	acceptance_assert( ! is_file( $themePath . '/core/customizer/animatecss.php' ), 'Rollback left a core file that was absent before update.' );
-	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'0.9.0'" ), 'Rollback did not restore the previous core version.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'1.0.0'" ), 'Rollback did not restore the previous core version.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $coreFile ), 'Acceptance rollback marker' ), 'Rollback did not restore a modified core file exactly.' );
 	acceptance_assert( is_file( $themePath . '/inc/acceptance-sentinel.php' ), 'Rollback touched /inc/.' );
 	acceptance_assert( is_file( $themePath . '/assets/scss/acceptance-sentinel.scss' ), 'Rollback touched a generic asset.' );
 	acceptance_assert( is_file( $themePath . '/acceptance-template.php' ), 'Rollback touched a template.' );
 	acceptance_assert( is_file( $themePath . '/blocks/stwp-sentinel/block.json' ), 'Rollback touched a block.' );
+	acceptance_assert( $projectStateBefore === file_get_contents( $themePath . '/st-toolkit.json' ), 'Rollback touched root project/toolkit state.' );
 	acceptance_assert( $coreHashesBefore === acceptance_core_hashes( $themePath ), 'Rollback did not restore the exact package-owned core file set and hashes.' );
 
 	$filesystem->dumpFile(
 		$bootstrap,
-		str_replace( "define( 'ST_WP_CORE_VERSION', '0.9.0' );", "define( 'ST_WP_CORE_VERSION', '1.0.0' );", (string) file_get_contents( $bootstrap ) )
+		str_replace( "define( 'ST_WP_CORE_VERSION', '1.0.0' );", "define( 'ST_WP_CORE_VERSION', '1.1.0' );", (string) file_get_contents( $bootstrap ) )
 	);
 	$filesystem->dumpFile(
 		$themePath . '/package.json',
@@ -198,7 +236,26 @@ try {
 	acceptance_assert( array() === $blockPlan['missing_dependencies'], 'Block plan did not recognize the declared Splide dependency.' );
 	acceptance_assert( str_ends_with( $blockPlan['destination_path'], 'blocks' . DIRECTORY_SEPARATOR . 'acme-hero-slider' ), 'Block plan used the wrong namespace-prefixed destination.' );
 
+	$blockTempBefore = array_merge(
+		glob( sys_get_temp_dir() . '/st-toolkit-block-hero-slider-*' ) ?: array(),
+		glob( sys_get_temp_dir() . '/st-toolkit-theme-files-hero-slider-*' ) ?: array()
+	);
+	sort( $blockTempBefore );
+
 	$installer->install( $theme, $manifest, 'hero-slider' );
+	$blockTempDuring = array_merge(
+		glob( sys_get_temp_dir() . '/st-toolkit-block-hero-slider-*' ) ?: array(),
+		glob( sys_get_temp_dir() . '/st-toolkit-theme-files-hero-slider-*' ) ?: array()
+	);
+	acceptance_assert( count( $blockTempDuring ) > count( $blockTempBefore ), 'Block installer did not prepare transformed files in isolated temporary storage.' );
+
+	unset( $installer );
+	$blockTempAfter = array_merge(
+		glob( sys_get_temp_dir() . '/st-toolkit-block-hero-slider-*' ) ?: array(),
+		glob( sys_get_temp_dir() . '/st-toolkit-theme-files-hero-slider-*' ) ?: array()
+	);
+	sort( $blockTempAfter );
+	acceptance_assert( $blockTempBefore === $blockTempAfter, 'Block installer left transformed files in temporary storage.' );
 
 	$blockPath = $themePath . '/blocks/acme-hero-slider';
 	$acfFiles  = glob( $themePath . '/acf-json/*.json' ) ?: array();
@@ -214,6 +271,79 @@ try {
 	acceptance_assert( is_file( $themePath . '/assets/scripts/scripts-register/plugins/splidejs/splide.min.js' ), 'Block install did not add the shared Splide JavaScript source.' );
 	acceptance_assert( 0 === preg_match( '#(?<![A-Za-z0-9])stwp(?:/|\\\\/|-|_)#', $blockJson . $renderPhp . $acfJson ), 'Installed block retained an explicit source namespace token.' );
 	acceptance_assert( is_file( $themePath . '/inc/acceptance-sentinel.php' ), 'Block install touched /inc/.' );
+
+	$uiInstaller = new UIProfileInstaller();
+	$bareProfile = UIProfileManifest::load( 'bare' );
+	$uiInstaller->install( $theme, $bareProfile, true );
+
+	acceptance_assert( is_file( $themePath . '/st-toolkit.json' ), 'Bare profile did not create committed profile state.' );
+	acceptance_assert( is_file( $themePath . '/assets/scss/foundation/_media.scss' ), 'Bare profile did not install its media foundation.' );
+	acceptance_assert( ( new UIProfileInstaller() )->status( $theme )['locked'], 'First UI profile selection was not locked.' );
+
+	$bareMain = $themePath . '/assets/scss/main.scss';
+	file_put_contents( $bareMain, (string) file_get_contents( $bareMain ) . "\n// Local acceptance modification.\n" );
+	$blueprintProfile = UIProfileManifest::load( 'blueprint' );
+	$blueprintPlan    = $uiInstaller->plan( $theme, $blueprintProfile );
+
+	acceptance_assert( in_array( 'assets/scss/main.scss', $blueprintPlan['conflicts'], true ), 'Profile switch did not detect a modified scaffold file.' );
+	acceptance_assert( $blueprintPlan['replacement_required'], 'Changing a locked UI profile did not require explicit replacement.' );
+
+	try {
+		$uiInstaller->install( $theme, $blueprintProfile, true );
+		acceptance_assert( false, 'Locked UI profile changed without explicit replacement.' );
+	} catch ( RuntimeException $exception ) {
+		acceptance_assert( str_contains( $exception->getMessage(), '--replace' ), 'Locked UI profile failure did not explain the replacement flag.' );
+	}
+
+	$uiInstaller->install( $theme, $blueprintProfile, true, true );
+	acceptance_assert( is_file( $themePath . '/assets/scss/woocommerce.scss' ), 'Blueprint profile did not install WooCommerce source styles.' );
+
+	$component = ComponentManifest::load( 'mega-menu' );
+	$oldCoreTheme = new ThemeContext(
+		$theme->path,
+		$theme->styleCssPath,
+		$theme->bootstrapPath,
+		'1.0.0',
+		$theme->patterns
+	);
+	$oldCoreComponentPlan = ( new ComponentInstaller() )->plan( $oldCoreTheme, $component );
+	acceptance_assert( ! $oldCoreComponentPlan['core_version_satisfied'], 'Component plan accepted a core version without the shared loader.' );
+	acceptance_assert( ! is_dir( $oldCoreComponentPlan['prepared_path'] ), 'Released component planner left transformed files in temporary storage.' );
+
+	try {
+		( new ComponentInstaller() )->install( $oldCoreTheme, $component );
+		acceptance_assert( false, 'Component installed against an unsupported core version.' );
+	} catch ( RuntimeException $exception ) {
+		acceptance_assert( str_contains( $exception->getMessage(), 'core:update' ), 'Component core-version failure did not provide update guidance.' );
+	}
+
+	( new ComponentInstaller() )->install( $theme, $component );
+
+	acceptance_assert( is_file( $themePath . '/inc/components/mega-menu.php' ), 'Mega-menu component did not install its PHP integration.' );
+	acceptance_assert( is_file( $themePath . '/assets/scss/components/mega-menu/_profile-tailwind.scss' ), 'Mega-menu component did not include all profile adapters.' );
+
+	$uiInstaller->install( $theme, $bareProfile, true, true );
+	$uiState = json_decode( (string) file_get_contents( $themePath . '/st-toolkit.json' ), true, 512, JSON_THROW_ON_ERROR );
+
+	acceptance_assert( 'bare' === $uiState['ui_profile'], 'Profile switch did not return to Bare.' );
+	acceptance_assert( isset( $uiState['components']['mega-menu'] ), 'Profile switch discarded installed component state.' );
+	acceptance_assert( is_file( $themePath . '/inc/components/mega-menu.php' ), 'Profile switch removed project component files.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/assets/scss/_st-toolkit-profile.scss' ), '"bare"' ), 'Bare profile did not activate component adapters.' );
+
+	$tailwindPlan = $uiInstaller->plan( $theme, UIProfileManifest::load( 'tailwind' ) );
+	acceptance_assert( in_array( 'assets/styles/main.css', array_column( $tailwindPlan['changes'], 'path' ), true ), 'Tailwind profile did not plan its native CSS entry.' );
+	acceptance_assert( isset( $tailwindPlan['npm_dev_dependencies']['@tailwindcss/vite'] ), 'Tailwind profile did not declare the official Vite plugin.' );
+	acceptance_assert( is_dir( $tailwindPlan['prepared_path'] ), 'UI planner did not prepare transformed files in isolated temporary storage.' );
+	$tailwindPreparedPath = $tailwindPlan['prepared_path'];
+	unset( $uiInstaller );
+	acceptance_assert( ! is_dir( $tailwindPreparedPath ), 'UI profile installer left transformed files in temporary storage.' );
+
+	$coreCleanupUpdater = new CoreUpdater();
+	$coreCleanupPlan    = $coreCleanupUpdater->plan( $theme );
+	acceptance_assert( is_dir( $coreCleanupPlan['prepared_path'] ), 'Core updater did not prepare transformed files in isolated temporary storage.' );
+	$corePreparedPath = $coreCleanupPlan['prepared_path'];
+	unset( $coreCleanupUpdater );
+	acceptance_assert( ! is_dir( $corePreparedPath ), 'Core updater left transformed files in temporary storage.' );
 
 	$originalPath = getenv( 'PATH' );
 	putenv( 'PATH=' . $temp . DIRECTORY_SEPARATOR . 'missing-bin' );

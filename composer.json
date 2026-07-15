@@ -1,6 +1,6 @@
 {
   "name": "snailtheme/wp-starter-toolkit",
-  "description": "Developer toolkit for updating ST WP Starter core files and installing curated WordPress starter blocks.",
+  "description": "Developer toolkit for ST WP Starter core updates, UI profiles, curated blocks, and reusable components.",
   "type": "library",
   "license": "GPL-2.0-or-later",
   "homepage": "https://www.snailtheme.com/",

@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Style Guidelines
 
 ## CSS Classes
@@ -59,3 +59,19 @@ the block or feature that needs them.
 
 Do not put project-specific styling in `/core/` assets. Core styles are shared
 toolkit-owned assets.
+
+## UI Profiles
+
+Treat the active UI profile as a project starting point, not a runtime API.
+Project blocks and reusable components must not assume Blueprint or Tailwind is
+active. Share design values through `theme.json`, WordPress-generated custom
+properties, or component-owned custom properties with fallbacks.
+
+Choose and lock the UI profile before project styling. Replacing a locked
+profile is destructive because the toolkit removes the previous profile's
+managed scaffold. It is a recovery/migration path, not a normal development
+workflow.
+
+Use Sass modules (`@use` and `@forward`) for project SCSS. Do not introduce new
+Sass `@import` statements. Tailwind CSS v4 entry points are native CSS and are
+processed by the official Vite plugin rather than Sass.

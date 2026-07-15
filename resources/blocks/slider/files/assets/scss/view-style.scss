@@ -1,1 +1,3 @@
-@import "styles";
+@use "styles";
+
+@include styles.render;

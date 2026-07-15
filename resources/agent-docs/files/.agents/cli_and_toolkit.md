@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # CLI And Toolkit
 
 ## Composer Commands
@@ -63,6 +63,13 @@ composer toolkit:core-rollback -- --yes
 composer toolkit:blocks-list
 composer toolkit:blocks-install:dry-run slider hero-slider
 composer toolkit:blocks-install slider hero-slider -- --yes
+composer toolkit:ui-list
+composer toolkit:ui-status
+composer toolkit:ui-install blueprint -- --dry-run
+composer toolkit:ui-install blueprint -- --yes
+composer toolkit:components-list
+composer toolkit:components-install mega-menu -- --dry-run
+composer toolkit:components-install mega-menu -- --yes
 ```
 
 These Composer scripts are project wrappers around the toolkit binary installed
@@ -100,3 +107,32 @@ Toolkit block installs are separate from core updates and docs updates. Use
 theme. Block installs can also install missing npm dependencies, copy required
 shared source assets, and run `npm run build` when the packaged block declares
 those requirements.
+
+UI profile installs scaffold project-owned style sources and update the
+committed `st-toolkit.json` profile receipt. Choose the profile once, before
+project styling begins. Available starting points are:
+
+- `bare` for the functional minimum
+- `blueprint` for the conventional Sass theme layer
+- `tailwind` for Tailwind CSS v4 through its official Vite plugin
+
+The first `ui:install` locks the selection. Do not treat UI profiles as themes
+to toggle during development. Replacing a locked profile is an exceptional,
+destructive operation:
+
+```bash
+composer toolkit:ui-install tailwind -- --dry-run
+composer toolkit:ui-install tailwind -- --replace --force --yes
+```
+
+`--replace` acknowledges deletion and replacement of the old profile's managed
+scaffold. `--force` is additionally required when those managed files contain
+local edits. The toolkit creates a backup before changing profile files and
+runs `npm run build` afterward. Restart a running `npm run dev` watcher because
+Vite reads profile integration from `st-toolkit.json` when it starts.
+
+Component installs add reusable non-block behavior separately from core,
+profiles, and blocks. A component uses one shared behavior implementation and
+selects its small style adapter from the active UI profile. The installer checks
+the component's required shared core version before writing files; run
+`composer toolkit:core-update` first when instructed.

@@ -36,7 +36,7 @@ if ( ! empty( $block['anchor'] ) ) {
 }
 
 // Create class attribute allowing for custom "className" and "align" values.
-$classes = "{$block_name}-section builder-section";
+$classes = "{$block_name}-section";
 if ( ! empty( $block['className'] ) ) {
 	$classes .= ' ' . $block['className'];
 }
@@ -61,7 +61,7 @@ $items = is_array( $items ) ? $items : array();
 
 $classes .= " {$block_name}-section--{$style}";
 // Keep Splide options on the block markup so every instance can use its own settings.
-$splide_classes = "splide {$block_name}-section-splide enter-view";
+$splide_classes = "splide {$block_name}-section__slider";
 $splide_options = array(
 	'type'       => 'loop',
 	'perPage'    => 1,
@@ -74,27 +74,21 @@ $splide_options = array(
 
 if ( 'vertical' === $style ) {
 	$splide_options['direction'] = 'ttb';
-	$splide_options['height']    = '500px';
+	$splide_options['height']    = 'clamp(28rem, 64vh, 34rem)';
 }
 
 $splide_options_json = wp_json_encode( $splide_options );
 $splide_options_json = $splide_options_json ? $splide_options_json : '{}';
 
-// Do something for Editor Preview only.
-if ( $is_preview ) {
-	$test = 'something...';
-}
-
 // Image used for the block preview.
 if ( isset( $block['data']['preview_image_help'] ) ) :
-	$file_url = str_replace( esc_url( get_stylesheet_directory() ), '', __DIR__, ); ?>
-	<img src="
-	<?php
-	echo esc_url( get_stylesheet_directory_uri() )
-	. esc_url( $file_url ) . '/'
-	. wp_kses_post( $block['data']['preview_image_help'] )
+	$file_url = str_replace( get_stylesheet_directory(), '', __DIR__ );
 	?>
-	" style="width:100%; height:auto;" alt="preview_image_help"/>
+	<img
+		src="<?php echo esc_url( get_stylesheet_directory_uri() . $file_url . '/' . $block['data']['preview_image_help'] ); ?>"
+		style="width:100%; height:auto;"
+		alt="<?php esc_attr_e( 'Block preview', 'st-wp-starter' ); ?>"
+	/>
 	<?php
 else :
 	$wrapper_attributes = st_wp_core_get_block_wrapper_attributes(
@@ -105,25 +99,23 @@ else :
 	);
 	?>
 	<section <?php echo wp_kses_post( $wrapper_attributes ); ?>>
-		<div class="container">
-			<div class="<?php echo esc_attr( $block_name ); ?>-section-wrapper">
+		<div class="<?php echo esc_attr( $block_name ); ?>-section__container">
+			<div class="<?php echo esc_attr( $block_name ); ?>-section__inner">
 				<div id="splide-<?php echo esc_attr( $block_id ); ?>"
 					class="<?php echo esc_attr( $splide_classes ); ?>"
 					data-splide="<?php echo esc_attr( $splide_options_json ); ?>">
-					<div class="splide__track <?php echo esc_html( $block_name ); ?>-section-splide__track">
-						<ul class="splide__list <?php echo esc_html( $block_name ); ?>-section-splide__list">
+					<div class="splide__track <?php echo esc_attr( $block_name ); ?>-section__track">
+						<ul class="splide__list <?php echo esc_attr( $block_name ); ?>-section__list">
 							<?php
-							foreach ( $items as $key => $item ) :
+							foreach ( $items as $item ) :
 								$item_title = $item[ "{$fields_group}-item__title" ] ?? null;
 								$item_image = $item[ "{$fields_group}-item__image" ] ?? null;
 								?>
-								<li class="splide__slide <?php echo esc_html( $block_name ); ?>-section-splide__slide">
+								<li class="splide__slide <?php echo esc_attr( $block_name ); ?>-section__slide">
 									<?php
 									if ( $item_title ) :
 										?>
-										<h4 class="<?php echo esc_html( $block_name ); ?>-section-splide__title animate__animated opacity-0"
-											data-animate-class="animate__fadeIn"
-											style="animation-delay: <?php echo esc_html( 200 + ( 100 * $key ) ); ?>ms">
+										<h4 class="<?php echo esc_attr( $block_name ); ?>-section__title">
 											<?php echo wp_kses_post( $item_title ); ?>
 										</h4>
 										<?php
@@ -133,9 +125,7 @@ else :
 									<?php
 									if ( $item_image ) :
 										?>
-										<div class="<?php echo esc_html( $block_name ); ?>-section-splide__image animate__animated opacity-0"
-											data-animate-class="animate__fadeIn"
-											style="animation-delay: <?php echo esc_html( 100 + ( 100 * $key ) ); ?>ms">
+										<div class="<?php echo esc_attr( $block_name ); ?>-section__image">
 											<?php echo wp_kses_post( st_wp_core_generate_img( $item_image ) ); ?>
 										</div>
 										<?php
@@ -148,14 +138,10 @@ else :
 						</ul>
 					</div>
 
-					<div class="splide__arrows <?php echo esc_html( $block_name ); ?>-section-splide__arrows">
-						<button class="splide__arrow <?php echo esc_html( $block_name ); ?>-section-splide__arrow splide__arrow--prev <?php echo esc_html( $block_name ); ?>-section-splide__arrow--prev animate__animated opacity-0" type="button" aria-label="<?php esc_html_e( 'Previous slide', 'st-wp-starter' ); ?>"
-								data-animate-class="animate__fadeIn"
-								style="animation-delay: 400ms"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" focusable="false"><path d="m15.5 0.932-4.3 4.38 14.5 14.6-14.5 14.5 4.3 4.4 14.6-14.6 4.4-4.3-4.4-4.4-14.6-14.6z"></path></svg></button>
+					<div class="splide__arrows <?php echo esc_attr( $block_name ); ?>-section__arrows">
+						<button class="splide__arrow splide__arrow--prev <?php echo esc_attr( $block_name ); ?>-section__arrow <?php echo esc_attr( $block_name ); ?>-section__arrow--prev" type="button" aria-label="<?php esc_html_e( 'Previous slide', 'st-wp-starter' ); ?>"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" focusable="false"><path d="m15.5 0.932-4.3 4.38 14.5 14.6-14.5 14.5 4.3 4.4 14.6-14.6 4.4-4.3-4.4-4.4-14.6-14.6z"></path></svg></button>
 
-						<button class="splide__arrow <?php echo esc_html( $block_name ); ?>-section-splide__arrow splide__arrow--next <?php echo esc_html( $block_name ); ?>-section-splide__arrow--next animate__animated opacity-0" type="button" aria-label="<?php esc_html_e( 'Next slide', 'st-wp-starter' ); ?>"
-								data-animate-class="animate__fadeIn"
-								style="animation-delay: 450ms"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" focusable="false"><path d="m15.5 0.932-4.3 4.38 14.5 14.6-14.5 14.5 4.3 4.4 14.6-14.6 4.4-4.3-4.4-4.4-14.6-14.6z"></path></svg></button>
+						<button class="splide__arrow splide__arrow--next <?php echo esc_attr( $block_name ); ?>-section__arrow <?php echo esc_attr( $block_name ); ?>-section__arrow--next" type="button" aria-label="<?php esc_html_e( 'Next slide', 'st-wp-starter' ); ?>"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 40 40" width="40" height="40" focusable="false"><path d="m15.5 0.932-4.3 4.38 14.5 14.6-14.5 14.5 4.3 4.4 14.6-14.6 4.4-4.3-4.4-4.4-14.6-14.6z"></path></svg></button>
 					</div>
 				</div>
 			</div>

@@ -1,0 +1,11 @@
+/**
+ * Mega-menu component entry point.
+ *
+ * The shared implementation owns structure and accessible interaction states.
+ * `_profile.scss` supplies only visual custom properties for the active UI.
+ */
+@use "sass:meta";
+@use "../st-toolkit-profile" as toolkit;
+@use "mega-menu/base";
+
+@include meta.load-css("mega-menu/profile-#{toolkit.$ui-profile}");

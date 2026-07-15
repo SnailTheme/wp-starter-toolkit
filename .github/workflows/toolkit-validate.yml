@@ -52,6 +52,11 @@ jobs:
           php bin/st-toolkit core:update --theme=/tmp/st-toolkit-fixture --dry-run
           php bin/st-toolkit init --theme=/tmp/st-toolkit-fixture --dry-run
           php bin/st-toolkit init --theme=/tmp/st-toolkit-fixture --yes
+          php bin/st-toolkit ui:list
+          php bin/st-toolkit ui:status --theme=/tmp/st-toolkit-fixture
+          php bin/st-toolkit ui:install bare --theme=/tmp/st-toolkit-fixture --dry-run
+          php bin/st-toolkit components:list
+          php bin/st-toolkit components:install mega-menu --theme=/tmp/st-toolkit-fixture --dry-run
           php bin/st-toolkit blocks:list
           php bin/st-toolkit blocks:install slider hero-slider --theme=/tmp/st-toolkit-fixture --dry-run
           php bin/st-toolkit doctor --theme=/tmp/st-toolkit-fixture

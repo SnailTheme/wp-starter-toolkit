@@ -29,6 +29,13 @@ final class CoreUpdater {
 	private readonly BackupManager $backups;
 	private readonly PhpValidator $phpValidator;
 
+	/**
+	 * Temporary core directories created during this service lifetime.
+	 *
+	 * @var string[]
+	 */
+	private array $temporaryDirectories = array();
+
 	public function __construct(
 		?CoreManifest $manifest = null,
 		?Filesystem $filesystem = null,
@@ -43,6 +50,19 @@ final class CoreUpdater {
 		$this->textFiles    = $textFiles ?? new TextFiles();
 		$this->backups      = $backups ?? new BackupManager();
 		$this->phpValidator = $phpValidator ?? new PhpValidator();
+	}
+
+	/**
+	 * Remove transformed core files after the updater is released.
+	 */
+	public function __destruct() {
+		foreach ( $this->temporaryDirectories as $directory ) {
+			try {
+				$this->filesystem->remove( $directory );
+			} catch ( \Throwable ) {
+				// Cleanup must never replace the command's real result with a destructor error.
+			}
+		}
 	}
 
 	/**
@@ -145,6 +165,7 @@ final class CoreUpdater {
 			. 'st-toolkit-core-' . bin2hex( random_bytes( 6 ) );
 
 		$this->filesystem->mkdir( $temp );
+		$this->temporaryDirectories[] = $temp;
 
 		foreach ( $this->resourceFiles() as $relativePath ) {
 			$source = $this->manifest->filesRoot() . DIRECTORY_SEPARATOR . $relativePath;

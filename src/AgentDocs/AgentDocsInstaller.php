@@ -51,10 +51,23 @@ final class AgentDocsInstaller {
 		$blockNamespace = $theme->pattern( 'block_namespace', 'stwp' );
 
 		foreach ( $this->manifest->files() as $relativePath ) {
-			$source = $this->sourcePath( $relativePath );
-			$target = $theme->resolve( $relativePath );
-			$action = 'add';
-			$reason = 'missing';
+			$source        = $this->sourcePath( $relativePath );
+			$target        = $theme->resolve( $relativePath );
+			$targetVersion = $this->manifest->fileVersion( $relativePath );
+			$sourceVersion = $this->installedVersion( $source );
+			$action        = 'add';
+			$reason        = 'missing';
+
+			if ( $targetVersion !== $sourceVersion ) {
+				throw new RuntimeException(
+					sprintf(
+						'Agent docs version mismatch for %s: manifest declares %s, source declares %s.',
+						$relativePath,
+						$targetVersion,
+						null === $sourceVersion ? 'no marker' : $sourceVersion
+					)
+				);
+			}
 
 			if ( is_file( $target ) ) {
 				$installedVersion = $this->installedVersion( $target );
@@ -62,9 +75,9 @@ final class AgentDocsInstaller {
 				if ( null === $installedVersion ) {
 					$action = 'skip';
 					$reason = 'customized-no-version-marker';
-				} elseif ( version_compare( $installedVersion, $this->manifest->version(), '<' ) ) {
+				} elseif ( version_compare( $installedVersion, $targetVersion, '<' ) ) {
 					$action = 'update';
-					$reason = sprintf( 'version-%s-to-%s', $installedVersion, $this->manifest->version() );
+					$reason = sprintf( 'version-%s-to-%s', $installedVersion, $targetVersion );
 				} elseif ( $force ) {
 					$action = 'update';
 					$reason = sprintf( 'forced-version-%s', $installedVersion );
@@ -75,10 +88,11 @@ final class AgentDocsInstaller {
 			}
 
 			$changes[] = array(
-				'path'   => $relativePath,
-				'action' => $action,
-				'reason' => $reason,
-				'source' => $source,
+				'path'           => $relativePath,
+				'action'         => $action,
+				'reason'         => $reason,
+				'target_version' => $targetVersion,
+				'source'         => $source,
 			);
 		}
 

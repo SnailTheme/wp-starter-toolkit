@@ -12,7 +12,7 @@ Package identity:
 ## Current State
 
 - active development branch: `next`
-- stable branch: `main` is planned for the first stable release
+- stable releases are published from `main`
 - repository is public on GitHub
 - the source theme currently consumes this package through Composer VCS as a
   development dependency
@@ -49,6 +49,27 @@ Block commands:
 composer toolkit:blocks-list
 composer toolkit:blocks-install:dry-run slider hero-slider
 composer toolkit:blocks-install slider hero-slider -- --yes
+```
+
+UI profile commands:
+
+```bash
+composer toolkit:ui-list
+composer toolkit:ui-status
+composer toolkit:ui-install blueprint -- --dry-run
+composer toolkit:ui-install blueprint -- --yes
+
+# Exceptional replacement of an already locked selection:
+composer toolkit:ui-install tailwind -- --dry-run
+composer toolkit:ui-install tailwind -- --replace --force --yes
+```
+
+Component commands:
+
+```bash
+composer toolkit:components-list
+composer toolkit:components-install mega-menu -- --dry-run
+composer toolkit:components-install mega-menu -- --yes
 ```
 
 Diagnostics:
@@ -89,9 +110,9 @@ AGENTS.md
 ```
 
 These files are ignored by Git by default. Each managed Markdown file starts
-with a version marker. If the packaged docs version increases, `init` updates
-older managed files. If a developer removes the marker, that file is treated as
-custom and is skipped.
+with its own content-version marker. `init` updates a file only when that
+specific guide has a newer packaged version. If a developer removes the marker,
+that file is treated as custom and is skipped.
 
 `docs:update` refreshes toolkit-managed docs without updating core files or
 installing blocks. Use it when documentation changes but the theme core should
@@ -165,6 +186,44 @@ Missing npm dependencies are installed before files are written when the user
 confirms the install or passes `--yes`. After block files, ACF JSON, and shared
 source assets are written, the toolkit runs `npm run build` so generated assets
 are refreshed.
+
+## UI Profiles
+
+UI profiles are project scaffolds stored in `resources/ui-profiles/`:
+
+- `bare` provides Normalize, box sizing, responsive media, accessibility, and
+  WordPress alignment helpers.
+- `blueprint` provides the conventional Sass visual layer from the starter.
+- `tailwind` uses Tailwind CSS v4 native CSS and `@tailwindcss/vite`.
+
+The starter's committed `st-toolkit.json` begins with an unlocked Bare
+foundation. After `composer st-toolkit init`, choose the project's UI once with
+`ui:install`; the command records and locks that selection. Profile files then
+become project-owned.
+
+Changing a locked selection is an exceptional destructive operation. A dry run
+lists every managed file that will be removed or replaced. The real command
+requires `--replace`, creates a backup, deletes obsolete managed files and empty
+directories, installs the target profile, and runs a clean production build.
+Locally modified managed files additionally require `--force`. Shared core
+assets, blocks, installed components, and untracked project files are outside
+the profile deletion list.
+
+One Vite configuration supports every profile. Sass profiles use recursive SCSS
+entry discovery; Tailwind declares native CSS entries and the official Vite
+plugin through `st-toolkit.json`. The state is read when Vite starts, so restart
+an active `npm run dev` watcher after the one-time profile selection.
+
+## Components
+
+Components package reusable non-block behavior under `resources/components/`.
+The `mega-menu` component supplies one accessible PHP/JavaScript disclosure
+implementation and selects a small style adapter for the active UI profile.
+Core's `/core/components.php` loader discovers project-owned integrations below
+`/inc/components/`; the component installer adds the integration and generic
+asset sources, then runs the theme production build. Component manifests state
+their required core version, and installation stops with a `core:update`
+instruction when the loader/API is too old.
 
 ## Relationship To The Theme
 

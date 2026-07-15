@@ -1,0 +1,72 @@
+/**
+ * Tailwind CSS v4 Block API v3 editor entry point.
+ */
+@import "tailwindcss" source("../../");
+
+@layer base {
+	embed,
+	iframe,
+	object,
+	img,
+	video {
+		max-width: 100%;
+	}
+
+	img,
+	video {
+		height: auto;
+	}
+
+	.animate__animated.opacity-0 {
+		opacity: 1 !important;
+	}
+}
+
+@layer utilities {
+	.alignleft {
+		float: left;
+		margin-right: 1.5em;
+		margin-bottom: 1.5em;
+	}
+
+	.alignright {
+		float: right;
+		margin-left: 1.5em;
+		margin-bottom: 1.5em;
+	}
+
+	.aligncenter {
+		clear: both;
+		display: block;
+		margin-right: auto;
+		margin-bottom: 1.5em;
+		margin-left: auto;
+	}
+
+	.screen-reader-text {
+		position: absolute !important;
+		width: 1px;
+		height: 1px;
+		padding: 0;
+		margin: -1px;
+		overflow: hidden;
+		clip: rect(0, 0, 0, 0);
+		white-space: nowrap;
+		border: 0;
+	}
+
+	.screen-reader-text:focus {
+		position: fixed !important;
+		top: 5px;
+		left: 5px;
+		z-index: 100000;
+		width: auto;
+		height: auto;
+		padding: 15px 23px 14px;
+		clip: auto;
+		white-space: normal;
+		background: #f1f1f1;
+		color: #21759b;
+		font-weight: 700;
+	}
+}
