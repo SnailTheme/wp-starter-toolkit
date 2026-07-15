@@ -56,12 +56,12 @@ UI profile commands:
 ```bash
 composer toolkit:ui-list
 composer toolkit:ui-status
-composer toolkit:ui-install blueprint -- --dry-run
-composer toolkit:ui-install blueprint -- --yes
+composer toolkit:ui-install:dry-run blueprint
+composer toolkit:ui-install blueprint
 
 # Exceptional replacement of an already locked selection:
-composer toolkit:ui-install tailwind -- --dry-run
-composer toolkit:ui-install tailwind -- --replace --force --yes
+composer toolkit:ui-install:dry-run tailwind
+composer toolkit:ui-replace tailwind
 ```
 
 Component commands:

@@ -65,8 +65,8 @@ composer toolkit:blocks-install:dry-run slider hero-slider
 composer toolkit:blocks-install slider hero-slider -- --yes
 composer toolkit:ui-list
 composer toolkit:ui-status
-composer toolkit:ui-install blueprint -- --dry-run
-composer toolkit:ui-install blueprint -- --yes
+composer toolkit:ui-install:dry-run blueprint
+composer toolkit:ui-install blueprint
 composer toolkit:components-list
 composer toolkit:components-install mega-menu -- --dry-run
 composer toolkit:components-install mega-menu -- --yes
@@ -121,15 +121,15 @@ to toggle during development. Replacing a locked profile is an exceptional,
 destructive operation:
 
 ```bash
-composer toolkit:ui-install tailwind -- --dry-run
-composer toolkit:ui-install tailwind -- --replace --force --yes
+composer toolkit:ui-install:dry-run tailwind
+composer toolkit:ui-replace tailwind
 ```
 
-`--replace` acknowledges deletion and replacement of the old profile's managed
-scaffold. `--force` is additionally required when those managed files contain
-local edits. The toolkit creates a backup before changing profile files and
-runs `npm run build` afterward. Restart a running `npm run dev` watcher because
-Vite reads profile integration from `st-toolkit.json` when it starts.
+The `toolkit:ui-replace` wrapper supplies the required `--replace` and `--force`
+flags. The toolkit still asks for confirmation, creates a backup before
+changing profile files, and runs `npm run build` afterward. Restart a running
+`npm run dev` watcher because Vite reads profile integration from
+`st-toolkit.json` when it starts.
 
 Component installs add reusable non-block behavior separately from core,
 profiles, and blocks. A component uses one shared behavior implementation and
