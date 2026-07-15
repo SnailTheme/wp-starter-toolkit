@@ -210,9 +210,17 @@ assets, blocks, installed components, and untracked project files are outside
 the profile deletion list.
 
 One Vite configuration supports every profile. Sass profiles use recursive SCSS
-entry discovery; Tailwind declares native CSS entries and the official Vite
-plugin through `st-toolkit.json`. The state is read when Vite starts, so restart
-an active `npm run dev` watcher after the one-time profile selection.
+entry discovery. Tailwind activates recursive native CSS discovery below
+`assets/styles/` and the official Vite plugin through `st-toolkit.json`.
+Non-underscored native CSS files compile independently with their relative
+paths preserved below `assets/css/`; underscore-prefixed files are import-only.
+The state is read when Vite starts, so restart an active `npm run dev` watcher
+after the one-time profile selection.
+
+Sass and Tailwind-native entries may coexist for standalone integrations, but
+they cannot claim the same generated path. The Vite pipeline reports both
+sources and fails before cleaning existing outputs when a collision is found.
+There is no CSS/Sass precedence or automatic merge.
 
 ## Components
 

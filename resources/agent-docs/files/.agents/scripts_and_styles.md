@@ -6,6 +6,7 @@
 Edit source files:
 
 - `/assets/scss/`
+- `/assets/styles/` when the Tailwind profile is active
 - `/assets/scripts/`
 - `/blocks/<block-name>/assets/scss/`
 - `/blocks/<block-name>/assets/js/`
@@ -44,13 +45,48 @@ The active profile and optional native CSS entries are recorded in
 use `composer toolkit:ui-status` and a profile dry run first.
 
 Native CSS entries are source files and must remain outside `/assets/css/`,
-which is a generated output directory deleted before production builds. Use
-`/assets/styles/` or another dedicated source directory for native CSS.
+which is a generated output directory deleted before production builds. The
+Tailwind pipeline accepts native CSS sources only below `/assets/styles/`.
+
+When Tailwind is active, Vite recursively discovers every non-underscored CSS
+file below `/assets/styles/` as an independent entry and preserves its relative
+path below `/assets/css/`. Files beginning with `_` are import-only partials and
+do not produce standalone output.
+
+Examples:
+
+- `/assets/styles/main.css` -> `/assets/css/main.min.css`
+- `/assets/styles/styles-enqueue/page-special.css` -> `/assets/css/styles-enqueue/page-special.min.css`
+- `/assets/styles/components/_buttons.css` -> no standalone output
+
+Only `main.css` and `editor.css` should normally import Tailwind itself. Native
+register/enqueue entries can use `@reference` with the correct relative path to
+access the main Tailwind theme and utilities for `@apply` without emitting the
+framework a second time.
+
+Keep the `@source not` exclusions for `/assets/css/`, `/assets/js/`, and
+`/.st-toolkit/` in the main Tailwind entries. Tailwind scans the theme source
+root for class names; excluding generated assets and toolkit backups prevents
+generated writes from causing development-watch rebuild loops.
+
+Classic Sass and Tailwind-native CSS can compile in parallel, but two entries
+must never claim the same output path. For example, these sources conflict:
+
+```text
+/assets/scss/styles-enqueue/example.scss
+/assets/styles/styles-enqueue/example.css
+```
+
+Both would produce `/assets/css/styles-enqueue/example.min.css`. Vite stops
+before cleaning generated assets and reports both source paths. Rename one
+entry, remove one, or make one an underscore-prefixed partial; the pipelines do
+not merge and neither source has precedence.
 
 The same `vite.config.js` handles all supported profiles. Bare and Blueprint
-use recursively discovered Sass entries. Tailwind declares native CSS entries
-and `@tailwindcss/vite` through `st-toolkit.json`. Vite reads this build contract
-at startup, so restart `npm run dev` after the one-time UI selection.
+use recursively discovered Sass entries. Tailwind activates recursive native
+CSS discovery and `@tailwindcss/vite` through `st-toolkit.json`. Native CSS is
+rejected while Tailwind is inactive. Vite reads the profile contract at
+startup, so restart `npm run dev` after the one-time UI selection.
 
 `npm run dev` runs Vite in watch mode and writes development source maps.
 `npm run build` runs a clean production build, removes stale outputs, and must
@@ -113,6 +149,11 @@ The core asset loader watches compiled asset directories:
 
 Handles are generated from the path after `styles-register`,
 `styles-enqueue`, `scripts-register`, or `scripts-enqueue`.
+
+In Tailwind projects, place native source entries in the matching
+`/assets/styles/styles-register/` or `/assets/styles/styles-enqueue/` directory.
+In Sass projects, use the matching directories below `/assets/scss/`. Both
+compile to the same PHP-watched `/assets/css/` directories.
 
 Examples:
 

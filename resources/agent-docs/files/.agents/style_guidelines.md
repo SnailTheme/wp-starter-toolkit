@@ -75,3 +75,14 @@ workflow.
 Use Sass modules (`@use` and `@forward`) for project SCSS. Do not introduce new
 Sass `@import` statements. Tailwind CSS v4 entry points are native CSS and are
 processed by the official Vite plugin rather than Sass.
+
+For Tailwind projects, prefer utility classes in project templates and keep
+shared design tokens in `/assets/styles/theme/_theme.css`. Put authored global
+base rules in import-only files below `/assets/styles/base/`, named front-end
+component rules below `/assets/styles/components/`, and project utilities below
+`/assets/styles/utilities/`. Continue using BEM for authored component classes;
+Tailwind utilities themselves follow Tailwind's naming system.
+
+Use `@layer` to place authored Tailwind-profile rules in the intended cascade
+layer. Use `@reference` from standalone native CSS entries that need the main
+theme context for `@apply`, rather than importing Tailwind into every entry.

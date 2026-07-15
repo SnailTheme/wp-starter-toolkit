@@ -164,6 +164,10 @@ final class UiInstallCommand extends ToolkitCommand {
 		} else {
 			$output->writeln( sprintf( 'Backup: %s', $data['backup_path'] ) );
 			$output->writeln( sprintf( 'Build: %s', $data['build']['status'] ) );
+
+			if ( ! empty( $data['build']['message'] ) ) {
+				$output->writeln( sprintf( '<error>Build error: %s</error>', $data['build']['message'] ) );
+			}
 		}
 
 		return self::SUCCESS;

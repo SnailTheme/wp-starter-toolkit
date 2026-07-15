@@ -331,12 +331,37 @@ try {
 	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/assets/scss/_st-toolkit-profile.scss' ), '"bare"' ), 'Bare profile did not activate component adapters.' );
 
 	$tailwindPlan = $uiInstaller->plan( $theme, UIProfileManifest::load( 'tailwind' ) );
-	acceptance_assert( in_array( 'assets/styles/main.css', array_column( $tailwindPlan['changes'], 'path' ), true ), 'Tailwind profile did not plan its native CSS entry.' );
-	acceptance_assert( isset( $tailwindPlan['npm_dev_dependencies']['@tailwindcss/vite'] ), 'Tailwind profile did not declare the official Vite plugin.' );
+	$tailwindChanges = array_column( $tailwindPlan['changes'], 'path' );
+	acceptance_assert( in_array( 'assets/styles/main.css', $tailwindChanges, true ), 'Tailwind profile did not plan its front-end CSS entry.' );
+	acceptance_assert( in_array( 'assets/styles/editor.css', $tailwindChanges, true ), 'Tailwind profile did not plan its editor CSS entry.' );
+	acceptance_assert( in_array( 'assets/styles/theme/_theme.css', $tailwindChanges, true ), 'Tailwind profile did not include its import-only theme module.' );
+	acceptance_assert( in_array( 'assets/styles/styles-enqueue/auto-enqueued-style.css', $tailwindChanges, true ), 'Tailwind profile did not include its native auto-enqueued entry.' );
+	acceptance_assert( in_array( 'assets/styles/styles-register/auto-registered-style.css', $tailwindChanges, true ), 'Tailwind profile did not include its native auto-registered entry.' );
+	acceptance_assert( '^4.3.2' === $tailwindPlan['npm_dev_dependencies']['tailwindcss'], 'Tailwind profile did not require the tested Tailwind release.' );
+	acceptance_assert( '^4.3.2' === $tailwindPlan['npm_dev_dependencies']['@tailwindcss/vite'], 'Tailwind profile did not require the tested official Vite plugin.' );
 	acceptance_assert( is_dir( $tailwindPlan['prepared_path'] ), 'UI planner did not prepare transformed files in isolated temporary storage.' );
 	$tailwindPreparedPath = $tailwindPlan['prepared_path'];
+	$tailwindMain = (string) file_get_contents( $tailwindPreparedPath . '/assets/styles/main.css' );
+	$tailwindAutoEntry = (string) file_get_contents( $tailwindPreparedPath . '/assets/styles/styles-enqueue/auto-enqueued-style.css' );
+	acceptance_assert( str_contains( $tailwindMain, '@source not "../../assets/js"' ), 'Tailwind profile did not exclude generated JavaScript from source detection.' );
+	acceptance_assert( str_contains( $tailwindMain, '@import "./theme/_theme.css"' ), 'Tailwind profile did not import its modular theme source.' );
+	acceptance_assert( str_contains( $tailwindAutoEntry, '@reference "../main.css"' ), 'Tailwind auto-enqueued entry did not reference the main Tailwind context.' );
 	unset( $uiInstaller );
 	acceptance_assert( ! is_dir( $tailwindPreparedPath ), 'UI profile installer left transformed files in temporary storage.' );
+
+	$tailwindInstaller = new UIProfileInstaller();
+	$tailwindInstaller->install( $theme, UIProfileManifest::load( 'tailwind' ), true, true );
+	$tailwindStatus = $tailwindInstaller->status( $theme );
+	$tailwindState = json_decode( (string) file_get_contents( $themePath . '/st-toolkit.json' ), true, 512, JSON_THROW_ON_ERROR );
+	acceptance_assert( 'tailwind' === $tailwindStatus['profile'], 'Tailwind profile did not become the active selection.' );
+	acceptance_assert( array() === $tailwindStatus['modified_files'], 'Fresh Tailwind profile files were immediately reported as modified.' );
+	acceptance_assert( array() === $tailwindStatus['missing_files'], 'Fresh Tailwind profile files were immediately reported as missing.' );
+	acceptance_assert( is_file( $themePath . '/assets/styles/styles-enqueue/auto-enqueued-style.css' ), 'Tailwind profile did not install its native auto-enqueued source.' );
+	acceptance_assert( ! is_file( $themePath . '/assets/scss/main.scss' ), 'Tailwind profile left the obsolete managed Sass main entry behind.' );
+	acceptance_assert( ! is_file( $themePath . '/assets/scss/styles-enqueue/auto-enqueued-style.scss' ), 'Tailwind profile left the conflicting Sass auto-enqueued entry behind.' );
+	acceptance_assert( ! is_file( $themePath . '/assets/scss/styles-register/auto-registered-style.scss' ), 'Tailwind profile left the conflicting Sass auto-registered entry behind.' );
+	acceptance_assert( is_file( $themePath . '/assets/scss/acceptance-sentinel.scss' ), 'Tailwind profile removed an unmanaged project Sass entry.' );
+	acceptance_assert( isset( $tailwindState['components']['mega-menu'] ), 'Tailwind profile switch discarded installed component state.' );
 
 	$coreCleanupUpdater = new CoreUpdater();
 	$coreCleanupPlan    = $coreCleanupUpdater->plan( $theme );

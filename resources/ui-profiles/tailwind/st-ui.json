@@ -4,8 +4,8 @@
   "description": "Tailwind CSS v4 compiled from native CSS with the official Vite plugin.",
   "version": "1.0.0",
   "npm_dev_dependencies": {
-    "tailwindcss": "^4.0.0",
-    "@tailwindcss/vite": "^4.0.0"
+    "tailwindcss": "^4.3.2",
+    "@tailwindcss/vite": "^4.3.2"
   },
   "css_entries": [
     "assets/styles/main.css",

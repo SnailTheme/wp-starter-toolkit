@@ -2,70 +2,18 @@
  * Tailwind CSS v4 front-end entry point.
  *
  * The source path starts at the theme root so Tailwind discovers classes in
- * PHP templates, scripts, and installed blocks without a separate JS config.
+ * PHP templates, source scripts, and installed blocks without a separate JS
+ * config. Generated assets and toolkit backups are excluded so their writes
+ * cannot trigger a development-watch rebuild loop.
+ *
+ * Underscore-prefixed imports are partials and do not compile independently.
  */
 @import "tailwindcss" source("../../");
-
-@layer base {
-	embed,
-	iframe,
-	object,
-	img,
-	video {
-		max-width: 100%;
-	}
-
-	img,
-	video {
-		height: auto;
-	}
-}
-
-@layer utilities {
-	.alignleft {
-		float: left;
-		margin-right: 1.5em;
-		margin-bottom: 1.5em;
-	}
-
-	.alignright {
-		float: right;
-		margin-left: 1.5em;
-		margin-bottom: 1.5em;
-	}
-
-	.aligncenter {
-		clear: both;
-		display: block;
-		margin-right: auto;
-		margin-bottom: 1.5em;
-		margin-left: auto;
-	}
-
-	.screen-reader-text {
-		position: absolute !important;
-		width: 1px;
-		height: 1px;
-		padding: 0;
-		margin: -1px;
-		overflow: hidden;
-		clip: rect(0, 0, 0, 0);
-		white-space: nowrap;
-		border: 0;
-	}
-
-	.screen-reader-text:focus {
-		position: fixed !important;
-		top: 5px;
-		left: 5px;
-		z-index: 100000;
-		width: auto;
-		height: auto;
-		padding: 15px 23px 14px;
-		clip: auto;
-		white-space: normal;
-		background: #f1f1f1;
-		color: #21759b;
-		font-weight: 700;
-	}
-}
+@source not "../../assets/css";
+@source not "../../assets/js";
+@source not "../../.st-toolkit";
+@import "./theme/_theme.css";
+@import "./base/_media.css";
+@import "./components/_components.css";
+@import "./utilities/_accessibility.css";
+@import "./utilities/_alignments.css";
