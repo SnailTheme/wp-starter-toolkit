@@ -323,7 +323,32 @@ try {
 	$uiInstaller->install( $theme, $blueprintProfile, true, true );
 	acceptance_assert( is_file( $themePath . '/assets/scss/woocommerce.scss' ), 'Blueprint profile did not install WooCommerce source styles.' );
 
-	$component = ComponentManifest::load( 'mega-menu' );
+	$component             = ComponentManifest::load( 'mega-menu' );
+	$profileStatePath      = $themePath . '/st-toolkit.json';
+	$profileMarkerPath     = $themePath . '/assets/scss/_st-toolkit-profile.scss';
+	$profileStateContents  = (string) file_get_contents( $profileStatePath );
+	$profileMarkerContents = (string) file_get_contents( $profileMarkerPath );
+	$filesystem->remove( array( $profileStatePath, $profileMarkerPath ) );
+
+	$unmanagedComponentPlan = ( new ComponentInstaller() )->plan( $theme, $component );
+	acceptance_assert( ! $unmanagedComponentPlan['ui_profile_ready'], 'Component plan accepted a theme without installed UI profile state.' );
+	acceptance_assert( 'unmanaged' === $unmanagedComponentPlan['ui_profile'], 'Component plan silently defaulted an unmanaged theme to Bare.' );
+
+	try {
+		( new ComponentInstaller() )->install( $theme, $component );
+		acceptance_assert( false, 'Component installed before a UI profile marker existed.' );
+	} catch ( RuntimeException $exception ) {
+		acceptance_assert( str_contains( $exception->getMessage(), 'ui:install' ), 'Missing UI profile failure did not explain the required setup command.' );
+	}
+
+	acceptance_assert( ! is_file( $themePath . '/inc/components/mega-menu.php' ), 'Failed component preflight wrote project files.' );
+	$filesystem->dumpFile( $profileStatePath, $profileStateContents );
+	$filesystem->dumpFile( $profileMarkerPath, $profileMarkerContents );
+	$filesystem->dumpFile( $profileMarkerPath, '$ui-profile: "bare";' . "\n" );
+	$staleMarkerPlan = ( new ComponentInstaller() )->plan( $theme, $component );
+	acceptance_assert( ! $staleMarkerPlan['ui_profile_ready'], 'Component plan accepted a profile marker that disagreed with committed state.' );
+	$filesystem->dumpFile( $profileMarkerPath, $profileMarkerContents );
+
 	$oldCoreTheme = new ThemeContext(
 		$theme->path,
 		$theme->styleCssPath,
@@ -346,6 +371,9 @@ try {
 
 	acceptance_assert( is_file( $themePath . '/inc/components/mega-menu.php' ), 'Mega-menu component did not install its PHP integration.' );
 	acceptance_assert( is_file( $themePath . '/assets/scss/components/mega-menu/_profile-tailwind.scss' ), 'Mega-menu component did not include all profile adapters.' );
+	$componentPhp = (string) file_get_contents( $themePath . '/inc/components/mega-menu.php' );
+	acceptance_assert( ! str_contains( $componentPhp, 'asset_exists' ) && ! str_contains( $componentPhp, 'asset_has_content' ), 'Mega-menu integration retained optional project asset helper calls.' );
+	acceptance_assert( str_contains( $componentPhp, 'get_template_directory()' ) && str_contains( $componentPhp, 'filemtime(' ), 'Mega-menu integration did not implement self-contained asset checks and versioning.' );
 
 	$uiInstaller->install( $theme, $bareProfile, true, true );
 	$uiState = json_decode( (string) file_get_contents( $themePath . '/st-toolkit.json' ), true, 512, JSON_THROW_ON_ERROR );

@@ -25,6 +25,8 @@ use Symfony\Component\Finder\Finder;
  * Plans and writes toolkit component packages.
  */
 final class ComponentInstaller {
+	private const PROFILE_MARKER = 'assets/scss/_st-toolkit-profile.scss';
+
 	/**
 	 * Temporary component directories created during this service lifetime.
 	 *
@@ -60,11 +62,12 @@ final class ComponentInstaller {
 	 * @return array<string,mixed>
 	 */
 	public function plan( ThemeContext $theme, ComponentManifest $component ): array {
-		$profile  = $this->activeProfile( $theme );
-		$prepared = $this->prepareFiles( $theme, $component );
-		$files    = $this->fileChecksums( $prepared );
-		$changes  = array();
-		$conflicts = array();
+		$profile      = $this->activeProfile( $theme );
+		$profileReady = $this->profileMarkerMatches( $theme, $profile );
+		$prepared     = $this->prepareFiles( $theme, $component );
+		$files        = $this->fileChecksums( $prepared );
+		$changes      = array();
+		$conflicts    = array();
 
 		foreach ( $files as $relativePath => $checksum ) {
 			$target = $theme->resolve( $relativePath );
@@ -84,16 +87,18 @@ final class ComponentInstaller {
 		}
 
 		return array(
-			'component'     => $component->slug(),
-			'version'       => $component->version(),
+			'component'              => $component->slug(),
+			'version'                => $component->version(),
 			'required_core_version' => $component->requiredCoreVersion(),
 			'core_version_satisfied' => $this->versions->satisfies( $theme->coreVersion, $component->requiredCoreVersion() ),
-			'ui_profile'    => $profile,
-			'changes'       => $changes,
-			'conflicts'     => $conflicts,
-			'prepared_path' => $prepared,
-			'file_checksums' => $files,
-			'build_command' => 'npm run build',
+			'ui_profile'            => $profile,
+			'ui_profile_ready'      => $profileReady,
+			'ui_profile_marker'     => self::PROFILE_MARKER,
+			'changes'               => $changes,
+			'conflicts'             => $conflicts,
+			'prepared_path'         => $prepared,
+			'file_checksums'        => $files,
+			'build_command'         => 'npm run build',
 		);
 	}
 
@@ -104,6 +109,12 @@ final class ComponentInstaller {
 	 */
 	public function install( ThemeContext $theme, ComponentManifest $component, bool $force = false ): array {
 		$plan = $this->plan( $theme, $component );
+
+		if ( ! $plan['ui_profile_ready'] ) {
+			throw new RuntimeException(
+				'Component installation requires an installed UI profile. Run ui:install PROFILE first.'
+			);
+		}
 
 		if ( ! $plan['core_version_satisfied'] ) {
 			throw new RuntimeException(
@@ -153,17 +164,39 @@ final class ComponentInstaller {
 
 	/**
 	 * Read the active profile from committed theme state.
+	 *
+	 * Missing state is unmanaged rather than implicitly Bare. Component Sass
+	 * must never assume an adapter when ui:install has not written its marker.
 	 */
 	private function activeProfile( ThemeContext $theme ): string {
 		$statePath = $theme->resolve( UIProfileInstaller::STATE_FILE );
 
 		if ( ! is_file( $statePath ) ) {
-			return 'bare';
+			return 'unmanaged';
 		}
 
 		$state = $this->json->read( $statePath );
 
-		return (string) ( $state['ui_profile'] ?? 'bare' );
+		return (string) ( $state['ui_profile'] ?? 'unmanaged' );
+	}
+
+	/**
+	 * Confirm the Sass profile marker exists and selects the committed profile.
+	 */
+	private function profileMarkerMatches( ThemeContext $theme, string $profile ): bool {
+		if ( 'unmanaged' === $profile ) {
+			return false;
+		}
+
+		$path = $theme->resolve( self::PROFILE_MARKER );
+
+		if ( ! is_file( $path ) ) {
+			return false;
+		}
+
+		$contents = file_get_contents( $path );
+
+		return is_string( $contents ) && str_contains( $contents, '$ui-profile: "' . $profile . '";' );
 	}
 
 	/**

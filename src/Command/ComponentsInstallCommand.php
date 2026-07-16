@@ -44,6 +44,13 @@ final class ComponentsInstallCommand extends ToolkitCommand {
 			return $this->render( $input, $output, $plan, true );
 		}
 
+		if ( ! $plan['ui_profile_ready'] ) {
+			$output->writeln( '<error>Component installation requires an installed UI profile.</error>' );
+			$output->writeln( 'Choose the project profile first with composer toolkit:ui-install PROFILE.' );
+
+			return self::FAILURE;
+		}
+
 		if ( ! $plan['core_version_satisfied'] ) {
 			$output->writeln(
 				sprintf(
@@ -111,13 +118,23 @@ final class ComponentsInstallCommand extends ToolkitCommand {
 				$data['core_version_satisfied'] ? 'satisfied' : 'update required'
 			)
 		);
-		$output->writeln( sprintf( 'UI adapter: %s', $data['ui_profile'] ) );
+		$output->writeln(
+			sprintf(
+				'UI adapter: %s (%s)',
+				$data['ui_profile'],
+				$data['ui_profile_ready'] ? 'ready' : 'ui:install required'
+			)
+		);
 
 		foreach ( $data['changes'] as $change ) {
 			$output->writeln( sprintf( '- %s %s', $change['action'], $change['path'] ) );
 		}
 
 		if ( $dryRun ) {
+			if ( ! $data['ui_profile_ready'] ) {
+				$output->writeln( '- required before install: composer toolkit:ui-install PROFILE' );
+			}
+
 			$output->writeln( sprintf( '- planned build: %s', $data['build_command'] ) );
 		} else {
 			$output->writeln( sprintf( 'Backup: %s', $data['backup_path'] ) );

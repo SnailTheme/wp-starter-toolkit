@@ -227,6 +227,9 @@ There is no CSS/Sass precedence or automatic merge.
 Components package reusable non-block behavior under `resources/components/`.
 The `mega-menu` component supplies one accessible PHP/JavaScript disclosure
 implementation and selects a small style adapter for the active UI profile.
+Choose the project UI with `ui:install` before installing components; component
+installation validates the active profile marker before writing files or
+running the production build.
 Core's `/core/components.php` loader discovers project-owned integrations below
 `/inc/components/`; the component installer adds the integration and generic
 asset sources, then runs the theme production build. Component manifests state
