@@ -84,7 +84,7 @@ final class DoctorCommand extends ToolkitCommand {
 				$output->writeln( '  npm dependencies: ok' );
 			} else {
 				foreach ( $block['missing_dependencies'] as $name => $version ) {
-					$output->writeln( sprintf( '  missing: npm install %s@%s', $name, $version ) );
+					$output->writeln( sprintf( '  missing or incompatible: npm install %s@%s', $name, $version ) );
 				}
 			}
 

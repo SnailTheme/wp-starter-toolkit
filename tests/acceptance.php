@@ -14,6 +14,7 @@ use SnailTheme\WPStarterToolkit\AgentDocs\AgentDocsManifest;
 use SnailTheme\WPStarterToolkit\Block\BlockInstaller;
 use SnailTheme\WPStarterToolkit\Block\BlockManifest;
 use SnailTheme\WPStarterToolkit\Block\NpmRunner;
+use SnailTheme\WPStarterToolkit\Block\PackageJsonInspector;
 use SnailTheme\WPStarterToolkit\Component\ComponentInstaller;
 use SnailTheme\WPStarterToolkit\Component\ComponentManifest;
 use SnailTheme\WPStarterToolkit\Core\CoreUpdater;
@@ -235,6 +236,30 @@ try {
 
 	acceptance_assert( array() === $blockPlan['missing_dependencies'], 'Block plan did not recognize the declared Splide dependency.' );
 	acceptance_assert( str_ends_with( $blockPlan['destination_path'], 'blocks' . DIRECTORY_SEPARATOR . 'acme-hero-slider' ), 'Block plan used the wrong namespace-prefixed destination.' );
+
+	$filesystem->dumpFile(
+		$themePath . '/package.json',
+		'{"dependencies":{"@splidejs/splide":"^4.1.4"},"devDependencies":{"tailwindcss":"^3.4.0","@tailwindcss/vite":"^4.3.2"}}' . "\n"
+	);
+	$tailwindDependencies = UIProfileManifest::load( 'tailwind' )->npmDevDependencies();
+	$dependencyIssues     = ( new PackageJsonInspector() )->missing( $theme, $tailwindDependencies );
+
+	acceptance_assert( '^4.3.2' === ( $dependencyIssues['tailwindcss'] ?? null ), 'Tailwind v3 was accepted for the Tailwind v4 UI profile.' );
+	acceptance_assert( ! isset( $dependencyIssues['@tailwindcss/vite'] ), 'A compatible Tailwind Vite plugin declaration was reported as incompatible.' );
+
+	$filesystem->dumpFile(
+		$themePath . '/package.json',
+		'{"dependencies":{"@splidejs/splide":"^4.1.4"},"devDependencies":{"tailwindcss":"^4.0.0","@tailwindcss/vite":"^4.3.2"}}' . "\n"
+	);
+	$dependencyIssues = ( new PackageJsonInspector() )->missing( $theme, $tailwindDependencies );
+	acceptance_assert( isset( $dependencyIssues['tailwindcss'] ), 'A range permitting unsupported early Tailwind v4 releases was accepted.' );
+
+	$filesystem->dumpFile(
+		$themePath . '/package.json',
+		'{"dependencies":{"@splidejs/splide":"^4.1.4"},"devDependencies":{"tailwindcss":"^4.4.0","@tailwindcss/vite":"^4.3.2"}}' . "\n"
+	);
+	$dependencyIssues = ( new PackageJsonInspector() )->missing( $theme, $tailwindDependencies );
+	acceptance_assert( array() === $dependencyIssues, 'A stricter compatible Tailwind dependency range was reported as incompatible.' );
 
 	$blockTempBefore = array_merge(
 		glob( sys_get_temp_dir() . '/st-toolkit-block-hero-slider-*' ) ?: array(),

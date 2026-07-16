@@ -152,7 +152,7 @@ final class UiInstallCommand extends ToolkitCommand {
 		}
 
 		foreach ( $data['missing_dependencies'] ?? array() as $name => $version ) {
-			$output->writeln( sprintf( '- missing development dependency %s@%s', $name, $version ) );
+			$output->writeln( sprintf( '- missing or incompatible development dependency %s@%s', $name, $version ) );
 		}
 
 		if ( $dryRun ) {
