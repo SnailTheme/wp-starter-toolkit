@@ -34,7 +34,7 @@
     "assets/scss/core/admin.scss": "a030c1b270126984ed027293be381932d7cd9aa373df65ed7192ace45d4490af",
     "core/bootstrap.php": "ca9bee5b382363ceb3a51531c918ce32854bf141132a48ffd6da390703653d03",
     "core/classes/class-st-wp-core-walker-nav-menu.php": "dd296d5666eaa621012c50914c6e3a28b88d828a3306ee6a32b995d81d633f86",
-    "core/components.php": "c5cf7ffb3bae6e8ec035aeefc1781882379631822a8d8f3476bedab21a9fb5d0",
+    "core/components.php": "808f7d5186ced41e39a88bab6e3e51904fc024c507d6e57a8f51bba22b5d061f",
     "core/core.php": "3f9ebac3599daefdbf88f8456c682dfd64c9b0a63f719650ff81606f767360c1",
     "core/customizer/animatecss.php": "db4904b2fbdb83f8440d5792e4dc470c661bf5d193e3109e5a5e0956e8f2310d",
     "core/customizer/disable-emojis.php": "6a259e9d5b98c5140635d258445b72692788501ac2564b8b0066abee40fd7f73",
@@ -48,7 +48,7 @@
     "core/debug.php": "45bf2877516f30c440b39a4c5eebb76db799135d2cb873b7385ea5a870169da2",
     "core/jetpack.php": "b63048900892d933e37468b1badf619f24a5f4756ab61546ff7ae922d04a6135",
     "core/scripts.php": "315fb24539e9c000ee88c86f1daec39f60637a6437c055bb5b4105e718faeebc",
-    "core/template-functions.php": "e3908d3be086d7e09b9965526ed65ae8b1cc0ae9cdcd0ba6c314c46a94906e8e",
+    "core/template-functions.php": "fb5244a106f8a748d3b1bcc997373050e8e74f34691b18600f07818b439272ce",
     "core/template-tags.php": "ac2441b271a7f7d44c3a4c1e28fdb1c684acd5500cba9c520e9a486d9be2f562",
     "core/tools/normalize-pot.php": "a1d8a5862737abfe318575c73fcf4ae0fafceb9a7be325ed7a7bc43faf9acfb3",
     "core/woocommerce.php": "7ce6d16f6ae76e4c5eb173acdc5bba35b8a49e1914734e815b2e5d663c180d50"

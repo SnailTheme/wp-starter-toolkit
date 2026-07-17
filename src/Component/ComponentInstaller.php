@@ -2,8 +2,8 @@
 /**
  * Component installer.
  *
- * Common behavior is shared by every UI profile. The component entry chooses
- * its small profile adapter according to the committed profile state.
+ * Components are installed after the project UI is selected so their source
+ * files can build through the theme's committed asset pipeline.
  */
 
 declare(strict_types=1);
@@ -200,7 +200,7 @@ final class ComponentInstaller {
 	}
 
 	/**
-	 * Prepare shared behavior and all profile adapters in temporary storage.
+	 * Prepare component files in temporary storage.
 	 */
 	private function prepareFiles( ThemeContext $theme, ComponentManifest $component ): string {
 		$temp = rtrim( sys_get_temp_dir(), DIRECTORY_SEPARATOR )

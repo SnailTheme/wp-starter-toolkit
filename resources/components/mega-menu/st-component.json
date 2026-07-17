@@ -1,7 +1,7 @@
 {
   "slug": "mega-menu",
   "title": "Mega Menu",
-  "description": "Accessible primary-menu disclosure behavior with keyboard, pointer, focus, and no-JavaScript support.",
-  "version": "1.0.0",
+  "description": "Responsive primary navigation with desktop mega panels, recursive mobile drawers, search, menu images, and complete keyboard and focus behavior.",
+  "version": "1.1.0",
   "required_core_version": ">=1.1.0"
 }

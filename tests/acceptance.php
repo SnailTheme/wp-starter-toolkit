@@ -202,6 +202,7 @@ try {
 	acceptance_assert( is_file( $themePath . '/core/customizer/animatecss.php' ), 'Core update did not add a missing owned file.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'1.1.0'" ), 'Core update did not install the packaged version.' );
 	acceptance_assert( is_file( $themePath . '/core/components.php' ), 'Core update did not install the shared component loader.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/core/components.php' ), 'RecursiveDirectoryIterator' ), 'Core component loader does not discover nested toolkit integrations.' );
 	acceptance_assert( is_file( $themePath . '/inc/acceptance-sentinel.php' ), 'Core update touched /inc/.' );
 	acceptance_assert( is_file( $themePath . '/assets/scss/acceptance-sentinel.scss' ), 'Core update touched a generic asset.' );
 	acceptance_assert( is_file( $themePath . '/acceptance-template.php' ), 'Core update touched a template.' );
@@ -341,7 +342,7 @@ try {
 		acceptance_assert( str_contains( $exception->getMessage(), 'ui:install' ), 'Missing UI profile failure did not explain the required setup command.' );
 	}
 
-	acceptance_assert( ! is_file( $themePath . '/inc/components/mega-menu.php' ), 'Failed component preflight wrote project files.' );
+	acceptance_assert( ! is_file( $themePath . '/inc/components/toolkit/mega-menu.php' ), 'Failed component preflight wrote project files.' );
 	$filesystem->dumpFile( $profileStatePath, $profileStateContents );
 	$filesystem->dumpFile( $profileMarkerPath, $profileMarkerContents );
 	$filesystem->dumpFile( $profileMarkerPath, '$ui-profile: "bare";' . "\n" );
@@ -369,19 +370,32 @@ try {
 
 	( new ComponentInstaller() )->install( $theme, $component );
 
-	acceptance_assert( is_file( $themePath . '/inc/components/mega-menu.php' ), 'Mega-menu component did not install its PHP integration.' );
-	acceptance_assert( is_file( $themePath . '/assets/scss/components/mega-menu/_profile-tailwind.scss' ), 'Mega-menu component did not include all profile adapters.' );
-	$componentPhp = (string) file_get_contents( $themePath . '/inc/components/mega-menu.php' );
+	$componentPhpPath  = $themePath . '/inc/components/toolkit/mega-menu.php';
+	$componentScssPath = $themePath . '/assets/scss/styles-register/toolkit/mega-menu.scss';
+	$componentPartPath = $themePath . '/assets/scss/styles-register/toolkit/mega-menu/_component.scss';
+	$componentJsPath   = $themePath . '/assets/scripts/scripts-register/toolkit/mega-menu.js';
+
+	acceptance_assert( is_file( $componentPhpPath ), 'Mega-menu component did not install its isolated PHP integration.' );
+	acceptance_assert( is_file( $componentScssPath ) && is_file( $componentPartPath ), 'Mega-menu component did not install its registered Sass sources.' );
+	acceptance_assert( is_file( $componentJsPath ), 'Mega-menu component did not install its registered JavaScript source.' );
+	acceptance_assert( ! is_file( $themePath . '/inc/components/mega-menu.php' ), 'Mega-menu component retained the obsolete flat PHP integration path.' );
+	$componentPhp  = (string) file_get_contents( $componentPhpPath );
+	$componentScss = (string) file_get_contents( $componentPartPath );
+	$componentJs   = (string) file_get_contents( $componentJsPath );
 	acceptance_assert( ! str_contains( $componentPhp, 'asset_exists' ) && ! str_contains( $componentPhp, 'asset_has_content' ), 'Mega-menu integration retained optional project asset helper calls.' );
 	acceptance_assert( str_contains( $componentPhp, 'get_template_directory()' ) && str_contains( $componentPhp, 'filemtime(' ), 'Mega-menu integration did not implement self-contained asset checks and versioning.' );
+	acceptance_assert( str_contains( $componentPhp, 'acme_acceptance_toolkit_mega_menu_location' ) && str_contains( $componentPhp, "'acme-acceptance'" ), 'Mega-menu integration did not apply theme whitelabel patterns.' );
+	acceptance_assert( str_contains( $componentPhp, "'toolkit.mega-menu'" ) && str_contains( $componentPhp, "wp_dequeue_script( 'navigation' )" ), 'Mega-menu integration does not use the registered toolkit handle or retire legacy navigation behavior.' );
+	acceptance_assert( str_contains( $componentScss, '.st-toolkit-mega-menu-enabled' ) && str_contains( $componentScss, '$navigation-breakpoint: 64rem' ), 'Mega-menu Sass lost its isolated scope or responsive configuration.' );
+	acceptance_assert( str_contains( $componentJs, 'openMobilePanel' ) && str_contains( $componentJs, 'preventScroll: true' ), 'Mega-menu JavaScript lost recursive drawer behavior or nested-panel focus protection.' );
 
 	$uiInstaller->install( $theme, $bareProfile, true, true );
 	$uiState = json_decode( (string) file_get_contents( $themePath . '/st-toolkit.json' ), true, 512, JSON_THROW_ON_ERROR );
 
 	acceptance_assert( 'bare' === $uiState['ui_profile'], 'Profile switch did not return to Bare.' );
 	acceptance_assert( isset( $uiState['components']['mega-menu'] ), 'Profile switch discarded installed component state.' );
-	acceptance_assert( is_file( $themePath . '/inc/components/mega-menu.php' ), 'Profile switch removed project component files.' );
-	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/assets/scss/_st-toolkit-profile.scss' ), '"bare"' ), 'Bare profile did not activate component adapters.' );
+	acceptance_assert( is_file( $componentPhpPath ) && is_file( $componentScssPath ), 'Profile switch removed project component files.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/assets/scss/_st-toolkit-profile.scss' ), '"bare"' ), 'Bare profile marker was not restored.' );
 
 	$tailwindPlan = $uiInstaller->plan( $theme, UIProfileManifest::load( 'tailwind' ) );
 	$tailwindChanges = array_column( $tailwindPlan['changes'], 'path' );
@@ -415,6 +429,7 @@ try {
 	acceptance_assert( ! is_file( $themePath . '/assets/scss/styles-register/auto-registered-style.scss' ), 'Tailwind profile left the conflicting Sass auto-registered entry behind.' );
 	acceptance_assert( is_file( $themePath . '/assets/scss/acceptance-sentinel.scss' ), 'Tailwind profile removed an unmanaged project Sass entry.' );
 	acceptance_assert( isset( $tailwindState['components']['mega-menu'] ), 'Tailwind profile switch discarded installed component state.' );
+	acceptance_assert( is_file( $componentPhpPath ) && is_file( $componentScssPath ) && is_file( $componentJsPath ), 'Tailwind profile switch removed profile-independent mega-menu sources.' );
 
 	$coreCleanupUpdater = new CoreUpdater();
 	$coreCleanupPlan    = $coreCleanupUpdater->plan( $theme );

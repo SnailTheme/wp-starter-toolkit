@@ -132,7 +132,9 @@ changing profile files, and runs `npm run build` afterward. Restart a running
 `st-toolkit.json` when it starts.
 
 Component installs add reusable non-block behavior separately from core,
-profiles, and blocks. A component uses one shared behavior implementation and
-selects its small style adapter from the active UI profile. The installer checks
-the component's required shared core version before writing files; run
+profiles, and blocks. Select the project UI first so the committed asset
+pipeline is available. Toolkit-owned component integrations use
+`/inc/components/toolkit/`, with their registered Sass and JavaScript sources
+isolated below matching `toolkit/` directories. The installer checks the
+component's required shared core version before writing files; run
 `composer toolkit:core-update` first when instructed.

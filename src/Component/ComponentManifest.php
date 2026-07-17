@@ -2,8 +2,8 @@
 /**
  * Component manifest reader.
  *
- * Components package reusable non-block behavior with one shared implementation
- * and a small style adapter selected from the theme's active UI profile.
+ * Components package reusable non-block behavior after the project has selected
+ * an asset pipeline through its active UI profile.
  */
 
 declare(strict_types=1);

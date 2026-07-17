@@ -225,16 +225,21 @@ There is no CSS/Sass precedence or automatic merge.
 ## Components
 
 Components package reusable non-block behavior under `resources/components/`.
-The `mega-menu` component supplies one accessible PHP/JavaScript disclosure
-implementation and selects a small style adapter for the active UI profile.
+The `mega-menu` component supplies a complete, profile-independent primary
+navigation: desktop disclosure panels, one-to-four-column layouts, recursive
+mobile drawers, expandable site search, menu-item image modes, keyboard and
+focus management, and a no-JavaScript fallback.
 Choose the project UI with `ui:install` before installing components; component
 installation validates the active profile marker before writing files or
 running the production build.
 Core's `/core/components.php` loader discovers project-owned integrations below
-`/inc/components/`; the component installer adds the integration and generic
-asset sources, then runs the theme production build. Component manifests state
-their required core version, and installation stops with a `core:update`
-instruction when the loader/API is too old.
+`/inc/components/` recursively. Toolkit-owned component integrations live below
+`/inc/components/toolkit/`, with registered Sass and JavaScript sources below
+the matching `/assets/**/styles-register/toolkit/` and
+`/assets/**/scripts-register/toolkit/` paths. The installer then runs the theme
+production build. Component manifests state their required core version, and
+installation stops with a `core:update` instruction when the loader/API is too
+old.
 
 ## Relationship To The Theme
 

@@ -2,7 +2,7 @@
 /**
  * components:install command.
  *
- * Installs shared component behavior and the adapter for the active UI profile.
+ * Installs reusable component behavior into the active theme project.
  */
 
 declare(strict_types=1);
@@ -120,7 +120,7 @@ final class ComponentsInstallCommand extends ToolkitCommand {
 		);
 		$output->writeln(
 			sprintf(
-				'UI adapter: %s (%s)',
+				'UI profile: %s (%s)',
 				$data['ui_profile'],
 				$data['ui_profile_ready'] ? 'ready' : 'ui:install required'
 			)
