@@ -14,6 +14,7 @@ use SnailTheme\WPStarterToolkit\Block\BlockRepository;
 use SnailTheme\WPStarterToolkit\Block\PackageJsonInspector;
 use SnailTheme\WPStarterToolkit\Core\CoreUpdater;
 use SnailTheme\WPStarterToolkit\Support\HelperInspector;
+use SnailTheme\WPStarterToolkit\UI\UIProfileInstaller;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -52,6 +53,7 @@ final class DoctorCommand extends ToolkitCommand {
 		$result = array(
 			'theme_path' => $theme->path,
 			'core'       => $core,
+			'ui'         => ( new UIProfileInstaller() )->status( $theme ),
 			'patterns'   => $theme->patterns,
 			'blocks'     => $blocks,
 		);
@@ -67,6 +69,13 @@ final class DoctorCommand extends ToolkitCommand {
 		$output->writeln( sprintf( 'Function prefix: %s', $theme->pattern( 'function_names' ) ) );
 		$output->writeln( sprintf( 'Block namespace: %s', $theme->pattern( 'block_namespace' ) ) );
 		$output->writeln( sprintf( 'Block category: %s', $theme->pattern( 'block_category' ) ) );
+		$output->writeln( sprintf( 'UI profile: %s %s', $result['ui']['profile'], $result['ui']['version'] ) );
+		$output->writeln( sprintf( 'UI selection: %s', $result['ui']['locked'] ? 'locked' : 'not yet locked' ) );
+		$output->writeln( sprintf( 'Modified UI scaffold files: %d', count( $result['ui']['modified_files'] ) ) );
+
+		if ( ! $result['ui']['locked'] ) {
+			$output->writeln( '  next: choose once with composer toolkit:ui-install PROFILE' );
+		}
 
 		foreach ( $blocks as $block ) {
 			$output->writeln( sprintf( 'Block %s, requires core %s:', $block['slug'], $block['required_core_version'] ?: 'any' ) );
@@ -75,7 +84,7 @@ final class DoctorCommand extends ToolkitCommand {
 				$output->writeln( '  npm dependencies: ok' );
 			} else {
 				foreach ( $block['missing_dependencies'] as $name => $version ) {
-					$output->writeln( sprintf( '  missing: npm install %s@%s', $name, $version ) );
+					$output->writeln( sprintf( '  missing or incompatible: npm install %s@%s', $name, $version ) );
 				}
 			}
 

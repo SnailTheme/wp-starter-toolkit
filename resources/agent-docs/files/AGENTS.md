@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Theme Agent Guide
 
 This file is the entrypoint for maintainers and coding agents working inside
@@ -40,6 +40,11 @@ The current namespace line is refreshed by `composer st-toolkit init` or
 - Prefer `/inc/` over `/core/` for project behavior.
 - Avoid changing generated assets directly; update source assets instead.
 - Keep documentation and examples generator-safe.
+- Check `composer toolkit:ui-status` before assuming a Sass or Tailwind source
+  layout.
+- Treat the locked UI profile as the project's permanent styling foundation;
+  replacement is an exceptional destructive migration.
+- Keep reusable blocks independent from the active UI profile.
 
 ## Local-Only Notes
 

@@ -66,7 +66,7 @@
             return;
         }
 
-        root.querySelectorAll( '.slider-section-splide' ).forEach( ( element ) => {
+        root.querySelectorAll( '.slider-section__slider' ).forEach( ( element ) => {
             if (
                 element.classList.contains( 'splide-initialized' ) ||
                 element.classList.contains( 'is-initialized' ) ||

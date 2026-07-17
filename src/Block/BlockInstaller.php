@@ -27,6 +27,13 @@ use Symfony\Component\Finder\Finder;
  * Prepares and writes block package files.
  */
 final class BlockInstaller {
+	/**
+	 * Temporary block directories created during this service lifetime.
+	 *
+	 * @var string[]
+	 */
+	private array $temporaryDirectories = array();
+
 	public function __construct(
 		private readonly Filesystem $filesystem = new Filesystem(),
 		private readonly ReplacementEngine $replacements = new ReplacementEngine(),
@@ -39,6 +46,19 @@ final class BlockInstaller {
 		private readonly JsonFile $json = new JsonFile(),
 		private readonly VersionConstraint $versions = new VersionConstraint()
 	) {}
+
+	/**
+	 * Remove transformed package files after the installer is released.
+	 */
+	public function __destruct() {
+		foreach ( $this->temporaryDirectories as $directory ) {
+			try {
+				$this->filesystem->remove( $directory );
+			} catch ( \Throwable ) {
+				// Cleanup must never replace the command's real result with a destructor error.
+			}
+		}
+	}
 
 	/**
 	 * Create a dry-run install plan.
@@ -174,6 +194,7 @@ final class BlockInstaller {
 			. 'st-toolkit-theme-files-' . $destinationSlug . '-' . bin2hex( random_bytes( 6 ) );
 
 		$this->filesystem->mkdir( $temp );
+		$this->temporaryDirectories[] = $temp;
 
 		foreach ( $this->themeFiles( $manifest ) as $relativePath ) {
 			$source = $manifest->themeFilesRoot() . DIRECTORY_SEPARATOR . $relativePath;
@@ -356,6 +377,7 @@ final class BlockInstaller {
 			. 'st-toolkit-block-' . $destinationSlug . '-' . bin2hex( random_bytes( 6 ) );
 
 		$this->filesystem->mkdir( $temp );
+		$this->temporaryDirectories[] = $temp;
 
 		foreach ( $this->blockFiles( $manifest ) as $relativePath ) {
 			$source = $manifest->filesRoot() . DIRECTORY_SEPARATOR . $relativePath;

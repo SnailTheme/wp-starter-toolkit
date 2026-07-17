@@ -16,9 +16,14 @@ use SnailTheme\WPStarterToolkit\Command\BlocksListCommand;
 use SnailTheme\WPStarterToolkit\Command\CoreCheckCommand;
 use SnailTheme\WPStarterToolkit\Command\CoreRollbackCommand;
 use SnailTheme\WPStarterToolkit\Command\CoreUpdateCommand;
+use SnailTheme\WPStarterToolkit\Command\ComponentsInstallCommand;
+use SnailTheme\WPStarterToolkit\Command\ComponentsListCommand;
 use SnailTheme\WPStarterToolkit\Command\DocsUpdateCommand;
 use SnailTheme\WPStarterToolkit\Command\DoctorCommand;
 use SnailTheme\WPStarterToolkit\Command\InitCommand;
+use SnailTheme\WPStarterToolkit\Command\UiInstallCommand;
+use SnailTheme\WPStarterToolkit\Command\UiListCommand;
+use SnailTheme\WPStarterToolkit\Command\UiStatusCommand;
 use Symfony\Component\Console\Application as ConsoleApplication;
 
 /**
@@ -29,7 +34,7 @@ final class Application extends ConsoleApplication {
 	 * Build the CLI application with all v1 commands.
 	 */
 	public function __construct() {
-		parent::__construct( 'ST WP Starter Toolkit', '1.0.0' );
+		parent::__construct( 'ST WP Starter Toolkit', '1.1.0' );
 
 		$this->add( new CoreCheckCommand() );
 		$this->add( new CoreUpdateCommand() );
@@ -39,5 +44,10 @@ final class Application extends ConsoleApplication {
 		$this->add( new InitCommand() );
 		$this->add( new BlocksListCommand() );
 		$this->add( new BlocksInstallCommand() );
+		$this->add( new UiListCommand() );
+		$this->add( new UiStatusCommand() );
+		$this->add( new UiInstallCommand() );
+		$this->add( new ComponentsListCommand() );
+		$this->add( new ComponentsInstallCommand() );
 	}
 }

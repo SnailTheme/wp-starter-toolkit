@@ -76,4 +76,20 @@ final class AgentDocsManifest {
 	public function files(): array {
 		return array_values( $this->data['files'] ?? array() );
 	}
+
+	/**
+	 * Content version for one managed documentation file.
+	 *
+	 * File versions are independent so an unchanged guide does not need to be
+	 * rewritten just because another guide changed in the same toolkit release.
+	 */
+	public function fileVersion( string $relativePath ): string {
+		$versions = $this->data['file_versions'] ?? array();
+
+		if ( ! is_array( $versions ) || ! isset( $versions[ $relativePath ] ) || ! is_string( $versions[ $relativePath ] ) ) {
+			throw new RuntimeException( sprintf( 'Agent docs manifest has no version for: %s', $relativePath ) );
+		}
+
+		return $versions[ $relativePath ];
+	}
 }

@@ -1,6 +1,6 @@
 {
   "schema": 1,
-  "version": "1.0.0",
+  "version": "1.1.0",
   "files_root": "files",
   "files": [
     "AGENTS.md",
@@ -10,5 +10,14 @@
     ".agents/template_tags_and_helpers.md",
     ".agents/blocks_and_acf.md",
     ".agents/cli_and_toolkit.md"
-  ]
+  ],
+  "file_versions": {
+    "AGENTS.md": "1.1.0",
+    ".agents/core_and_overrides.md": "1.1.0",
+    ".agents/scripts_and_styles.md": "1.1.0",
+    ".agents/style_guidelines.md": "1.1.0",
+    ".agents/template_tags_and_helpers.md": "1.0.0",
+    ".agents/blocks_and_acf.md": "1.1.0",
+    ".agents/cli_and_toolkit.md": "1.1.0"
+  }
 }

@@ -45,6 +45,30 @@ final class NpmRunner {
 	}
 
 	/**
+	 * Install build-only npm dependencies into devDependencies.
+	 *
+	 * UI build integrations such as Tailwind are development tools and should not
+	 * become production runtime dependencies in a generated theme.
+	 *
+	 * @param array<string,string> $dependencies Package names to version constraints.
+	 *
+	 * @return array<string,mixed>
+	 */
+	public function installDevDependencies( ThemeContext $theme, array $dependencies ): array {
+		if ( array() === $dependencies ) {
+			return array(
+				'status'  => 'skipped',
+				'command' => 'dependencies already satisfied',
+			);
+		}
+
+		return $this->run(
+			$theme,
+			array_merge( array( 'npm', 'install', '--save-dev' ), $this->dependencyArguments( $dependencies ) )
+		);
+	}
+
+	/**
 	 * Run the theme production asset build.
 	 *
 	 * @return array<string,mixed>
@@ -60,6 +84,17 @@ final class NpmRunner {
 	 */
 	public function installCommand( array $dependencies ): string {
 		return $this->commandString( array_merge( array( 'npm', 'install' ), $this->dependencyArguments( $dependencies ) ) );
+	}
+
+	/**
+	 * Return the command for missing development-only dependencies.
+	 *
+	 * @param array<string,string> $dependencies Package names to version constraints.
+	 */
+	public function installDevCommand( array $dependencies ): string {
+		return $this->commandString(
+			array_merge( array( 'npm', 'install', '--save-dev' ), $this->dependencyArguments( $dependencies ) )
+		);
 	}
 
 	/**

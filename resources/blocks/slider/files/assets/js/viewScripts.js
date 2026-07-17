@@ -28,7 +28,7 @@ document.addEventListener( 'DOMContentLoaded', function () {
         }
     };
 
-    document.querySelectorAll( '.slider-section-splide' ).forEach( ( element ) => {
+    document.querySelectorAll( '.slider-section__slider' ).forEach( ( element ) => {
         if (
             typeof Splide === 'undefined' ||
             element.classList.contains( 'splide-initialized' ) ||

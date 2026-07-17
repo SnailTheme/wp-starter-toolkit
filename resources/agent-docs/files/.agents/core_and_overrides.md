@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Core And Overrides
 
 ## Directory Roles
@@ -9,6 +9,11 @@ future core updates.
 
 `/inc/` contains theme-owned behavior. Put project customizations, overrides,
 and integration hooks here.
+
+`/core/components.php` is shared discovery infrastructure. It loads the
+project-selected integrations installed below `/inc/components/`. Customize an
+installed component in `/inc/components/`; do not move the generic loader out
+of core.
 
 ## Early Loader Decisions
 

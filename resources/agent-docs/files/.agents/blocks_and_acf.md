@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Blocks And ACF
 
 ## Namespace Map
@@ -160,17 +160,25 @@ Block SCSS source files live in:
 Current style file pattern:
 
 - `_styles.scss` contains shared block styles.
-- `view-style.scss` imports front-end styles.
-- `editor-style.scss` imports editor styles.
+- `view-style.scss` emits front-end styles with `@use` and a mixin.
+- `editor-style.scss` emits the same baseline below the editor wrapper.
 
 For Block API v3, editor styles must be iframe-safe. Scope editor-only rules
 under `.editor-styles-wrapper` when they are meant only for the editor canvas:
 
 ```scss
+@use "styles";
+
 .editor-styles-wrapper {
-  @import "styles";
+	@include styles.render;
 }
 ```
+
+Packaged blocks must remain UI-profile neutral. Use block-owned BEM classes,
+WordPress `theme.json` variables with sensible fallbacks, and block-owned CSS
+custom properties. Do not depend on generic profile classes such as
+`.container`, Blueprint Sass variables, Tailwind utility classes, or optional
+theme animation classes in a reusable render template.
 
 Vite compiles block SCSS to:
 

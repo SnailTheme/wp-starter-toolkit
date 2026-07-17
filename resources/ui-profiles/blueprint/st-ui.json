@@ -1,0 +1,9 @@
+{
+  "slug": "blueprint",
+  "title": "Blueprint",
+  "description": "A conventional Sass starter with typography, forms, layouts, WordPress components, Jetpack, and WooCommerce styles.",
+  "version": "1.0.0",
+  "npm_dev_dependencies": {},
+  "css_entries": [],
+  "vite_plugins": []
+}

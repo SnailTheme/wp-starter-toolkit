@@ -11,6 +11,7 @@ declare(strict_types=1);
 namespace SnailTheme\WPStarterToolkit\Command;
 
 use SnailTheme\WPStarterToolkit\AgentDocs\AgentDocsInstaller;
+use SnailTheme\WPStarterToolkit\UI\UIProfileInstaller;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -31,6 +32,7 @@ final class InitCommand extends ToolkitCommand {
 	protected function execute( InputInterface $input, OutputInterface $output ): int {
 		$theme     = $this->theme( $input );
 		$installer = AgentDocsInstaller::create();
+		$uiStatus  = ( new UIProfileInstaller() )->status( $theme );
 
 		if ( (bool) $input->getOption( 'dry-run' ) ) {
 			$result = $installer->plan( $theme );
@@ -42,6 +44,7 @@ final class InitCommand extends ToolkitCommand {
 
 			$output->writeln( '<info>Toolkit init dry run</info>' );
 			$this->printResult( $output, $result );
+			$this->printUiSetup( $output, $uiStatus );
 
 			return self::SUCCESS;
 		}
@@ -61,6 +64,7 @@ final class InitCommand extends ToolkitCommand {
 
 		$output->writeln( '<info>Toolkit init complete</info>' );
 		$this->printResult( $output, $result ?: $plan );
+		$this->printUiSetup( $output, $uiStatus );
 
 		return self::SUCCESS;
 	}
@@ -85,5 +89,22 @@ final class InitCommand extends ToolkitCommand {
 		foreach ( $gitignore['missing_lines'] as $line ) {
 			$output->writeln( sprintf( '  add ignore: %s', $line ) );
 		}
+	}
+
+	/**
+	 * Suggest the one-time UI choice while the starter is still unlocked.
+	 *
+	 * @param array<string,mixed> $status Current UI profile status.
+	 */
+	private function printUiSetup( OutputInterface $output, array $status ): void {
+		if ( $status['locked'] ) {
+			return;
+		}
+
+		$output->writeln( '' );
+		$output->writeln( '<comment>Next: choose the project UI once before adding project styles.</comment>' );
+		$output->writeln( '  composer toolkit:ui-list' );
+		$output->writeln( '  composer toolkit:ui-install PROFILE' );
+		$output->writeln( 'The selected profile is then locked; replacing it later is an explicit destructive operation.' );
 	}
 }
