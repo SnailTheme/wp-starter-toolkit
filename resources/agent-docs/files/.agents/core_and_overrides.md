@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.2.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.1 -->
 # Core And Overrides
 
 ## Directory Roles
@@ -14,6 +14,14 @@ and integration hooks here.
 project-selected integrations installed below `/inc/components/`. Customize an
 installed component in `/inc/components/`; do not move the generic loader out
 of core.
+
+The core updater owns only `/core/` and the `core/` directories under
+`/assets/scss/`, `/assets/scripts/`, `/assets/css/` and `/assets/js/`.
+Do not expand a manifest glob or removal entry to include `/inc/`, blocks,
+templates or generic assets. Component installation into project-owned
+`/inc/components/toolkit/` is a separate operation, not core-update ownership.
+Maintainer checksum generation validates package data; it is not permission to
+edit a client's project or proof that the packaged callbacks execute correctly.
 
 ## Early Loader Decisions
 

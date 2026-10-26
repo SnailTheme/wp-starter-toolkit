@@ -2,12 +2,16 @@
 name: wp-starter-assets
 description: Add or change theme CSS, Sass, Tailwind, JavaScript, asset handles, or enqueue behavior using the theme's Vite pipeline and registry.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.0.1 -->
 # Work With Theme Assets
 
 Read [Scripts and styles](../../scripts_and_styles.md) and
 [Style guidelines](../../style_guidelines.md). Check `composer toolkit:ui-status`
 and `st-toolkit.json`; do not assume the project uses Sass or Tailwind.
+Keep `assets/scss/_st-toolkit-profile.scss` a dedicated literal profile marker
+matching that receipt, not a place for project Sass logic or nested overrides.
+Commented examples do not establish which profile is active; use the profile
+installer rather than editing state/markers to get past a failed preflight.
 
 - Edit sources, never generated minified files. Sass entries live under
   `assets/scss/`, JavaScript under `assets/scripts/`, and Tailwind-native CSS

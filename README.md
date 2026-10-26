@@ -95,7 +95,7 @@ composer st-toolkit -- blocks:install slider hero-slider --theme=/path/to/theme 
 Use `--` before toolkit arguments when an option name may also be a Composer
 option, such as `--dry-run`.
 
-Every command supports `--theme` and `--json`. Write commands also support
+Theme-targeting commands support `--theme` and `--json`. Write commands also support
 `--dry-run` and `--yes`. `docs:update` also supports `--force` for refreshing
 current-version managed docs while the package is still on a pre-release
 branch.
@@ -274,6 +274,80 @@ Sass and Tailwind-native entries may coexist for standalone integrations, but
 they cannot claim the same generated path. The Vite pipeline reports both
 sources and fails before cleaning existing outputs when a collision is found.
 There is no CSS/Sass precedence or automatic merge.
+
+## Maintainer Tools
+
+Run these commands from a toolkit Git checkout, not from a client's installed
+`vendor` package. They do not select a project UI, update theme core, run npm,
+or bump any version. Packagist distribution is not required.
+
+### Core Manifest
+
+```bash
+php bin/st-toolkit core:manifest --check
+php bin/st-toolkit core:manifest --dry-run --json
+php bin/st-toolkit core:manifest --yes
+```
+
+The command hashes the packaged files under `resources/core/files/` and refreshes
+only `checksums` in `resources/core/st-wp-core-manifest.json`. Ownership patterns,
+removed files, required public helpers and release versions remain explicit
+maintainer decisions. Invalid ownership, missing required helpers, symlinks and
+a bootstrap/manifest version mismatch fail preflight. `--check` exits nonzero
+for stale, missing or obsolete checksums and writes nothing; CI runs this check.
+The command does not accept `--theme` or copy a workbench into core resources.
+Ownership and removal declarations must stay inside the five shared core roots
+listed above; only the six known legacy flat `core-admin`/`core-customizer`
+asset removals may sit outside them. A broad glob cannot grant ownership of
+project `/inc/`, blocks, templates or general assets. PHP is inspected without
+execution: imports and deferred function bodies do not satisfy required helpers
+or the bootstrap's literal, global `define()` contract.
+
+### Profile Export And Verify
+
+```bash
+php bin/st-toolkit ui:profile-verify blueprint --theme=/absolute/workbench
+php bin/st-toolkit ui:profile-export blueprint --theme=/absolute/workbench --dry-run
+php bin/st-toolkit ui:profile-export blueprint --theme=/absolute/workbench --yes
+php bin/st-toolkit ui:profile-verify blueprint --theme=/absolute/workbench --json
+```
+
+Both commands support Bare, Blueprint and Tailwind. The workbench receipt and
+Sass marker must match the requested profile. Verification is read-only and
+returns nonzero for source drift or stale packaged checksums; unlike `ui:status`,
+it compares with the current package, not the receipt's installation snapshot.
+Verification also supports whitelabeled themes by applying their theme patterns
+to the expected packaged files.
+Keep the dedicated Sass marker limited to comments and one literal
+`$ui-profile: "PROFILE";` assignment (optional `!default`). Comments, examples,
+computed values, duplicate assignments and nested overrides cannot certify a
+profile. Component installation uses the same check.
+
+Export requires a starter-identity workbench. It deliberately refuses customized
+theme patterns rather than guessing how to reverse client identifiers. It copies
+only source paths explicitly listed in that profile's `st-ui.json` checksum map,
+then refreshes that map without changing the profile version or build metadata.
+Export compares raw source bytes; only verification applies installation-time
+theme replacements. This keeps every recorded checksum tied to the actual
+packaged file even when a replacement changes URL casing.
+Core, plugin shims, installed components, blocks, generated CSS/JS, dependencies,
+receipts and project PHP are not exported. Other local source files are ignored.
+
+To add a profile file, add its intended path to the packaged checksum map first
+(a 64-zero placeholder is accepted), create the source in the workbench, then
+review an export dry run. To retire a file, remove it from the packaged files
+tree and checksum map explicitly. Export never infers ownership from arbitrary
+workbench files or removes client files.
+
+Human-readable change lists are printed before either maintainer write command
+asks for confirmation. Export needs confirmation (`--yes` in automation);
+`--dry-run` writes nothing.
+Changed inputs invalidate the approved plan. Previous package files and the
+manifest are backed up under the toolkit's ignored `.st-toolkit/backups/`;
+partial write failures restore changed package files. The source workbench and
+its receipt are never modified. Review the resulting Git diff, verify again,
+then install the exported profile into a fresh theme and run its production
+build and editor/front-end checks before releasing.
 
 ## Components
 

@@ -18,6 +18,7 @@ use SnailTheme\WPStarterToolkit\Support\TextFiles;
 use SnailTheme\WPStarterToolkit\Support\VersionConstraint;
 use SnailTheme\WPStarterToolkit\Theme\ThemeContext;
 use SnailTheme\WPStarterToolkit\UI\UIProfileInstaller;
+use SnailTheme\WPStarterToolkit\UI\UIProfileMarker;
 use Symfony\Component\Filesystem\Filesystem;
 use Symfony\Component\Finder\Finder;
 
@@ -194,9 +195,9 @@ final class ComponentInstaller {
 			return false;
 		}
 
-		$contents = file_get_contents( $path );
+		$contents = @file_get_contents( $path );
 
-		return is_string( $contents ) && str_contains( $contents, '$ui-profile: "' . $profile . '";' );
+		return is_string( $contents ) && ( new UIProfileMarker() )->matches( $contents, $profile );
 	}
 
 	/**

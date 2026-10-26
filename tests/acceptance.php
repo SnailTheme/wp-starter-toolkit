@@ -233,7 +233,7 @@ TEXT;
 	$theme        = ( new ThemeDetector() )->detect( $themePath );
 	$docsManifest = AgentDocsManifest::load();
 
-	acceptance_assert( '1.3.0' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own content version.' );
+	acceptance_assert( '1.3.1' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own content version.' );
 	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/scripts_and_styles.md' ), 'Changed asset guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/style_guidelines.md' ), 'Changed style guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.0.0' === $docsManifest->fileVersion( '.agents/template_tags_and_helpers.md' ), 'Unchanged helper guide was unnecessarily versioned as changed.' );
@@ -249,12 +249,12 @@ TEXT;
 	$docsChanges   = array_column( $docsPlan['changes'], null, 'path' );
 
 	acceptance_assert( 'update' === $docsChanges['AGENTS.md']['action'], 'Changed agent guide was not planned for update.' );
-	acceptance_assert( '1.3.0' === $docsChanges['AGENTS.md']['target_version'], 'Agent guide plan did not expose its file-specific target version.' );
+	acceptance_assert( '1.3.1' === $docsChanges['AGENTS.md']['target_version'], 'Agent guide plan did not expose its file-specific target version.' );
 	acceptance_assert( 'skip' === $docsChanges['.agents/template_tags_and_helpers.md']['action'], 'Unchanged current-version helper guide was planned for update.' );
 	acceptance_assert( '1.0.0' === $docsChanges['.agents/template_tags_and_helpers.md']['target_version'], 'Helper guide plan used the package-wide version instead of its content version.' );
 
 	$docsInstaller->install( $theme );
-	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/AGENTS.md' ), '1.3.0' ), 'Changed agent guide did not update.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/AGENTS.md' ), 'st-toolkit-agent-doc-version: 1.3.1' ), 'Changed agent guide did not update.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/.agents/template_tags_and_helpers.md' ), 'Current Helper Guide Sentinel' ), 'Unchanged helper guide was rewritten.' );
 
 	$updated = ( new CoreUpdater() )->update( $theme );

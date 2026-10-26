@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.3.0 -->
+<!-- st-toolkit-agent-doc-version: 1.3.1 -->
 # CLI And Toolkit
 
 ## Composer Commands
@@ -101,6 +101,21 @@ Expected update targets:
 Do not use toolkit core updates as a way to change project-specific code in
 `/inc/`, templates, generic assets, or local blocks.
 
+Before confirming a destructive operation, inspect its dry run and check every
+planned path against that operation's ownership. Stop on unexpected targets
+rather than broadening globs, bypassing preflight or treating `--yes` as a fix.
+Keep the backup location and distinguish a completed installation from a failed
+build that left files in place. An exit-zero checksum check verifies packaged
+bytes; runtime behavior still needs the appropriate theme/editor checks.
+
+Package maintainers have separate `core:manifest`, `ui:profile-export` and
+`ui:profile-verify` commands. Inspect the installed command's help first; older
+toolkit releases may not include them. They validate/export packaged resources,
+not client setup or theme updates. Mutating maintainer commands belong in a
+toolkit Git checkout, never a client's installed vendor copy. See the public
+[maintainer guide](https://github.com/snailtheme/wp-starter-toolkit#maintainer-tools)
+for allowlists, checksum generation, workbench identity, backups and verification.
+
 Toolkit docs updates are separate from core updates. Use `docs:update` when
 you only want local instructions and skills refreshed. Initialization installs
 `AGENTS.md`, focused guides and canonical `.agents/skills/` workflows, a
@@ -161,6 +176,13 @@ project styling begins. Available starting points are:
 - `bare` for the functional minimum
 - `blueprint` for the conventional Sass theme layer
 - `tailwind` for Tailwind CSS v4 through its official Vite plugin
+
+Keep `/assets/scss/_st-toolkit-profile.scss` as a dedicated managed marker:
+comments and one literal `$ui-profile: "PROFILE";` assignment, optionally with
+`!default`. Put other Sass logic elsewhere. Commented examples, duplicate
+assignments and computed/nested overrides do not establish the active profile.
+Its value must agree with `st-toolkit.json`; do not edit either just to bypass
+an installer preflight.
 
 The first `ui:install` locks the selection. Do not treat UI profiles as themes
 to toggle during development. Replacing a locked profile is an exceptional,

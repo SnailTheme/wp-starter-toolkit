@@ -2,7 +2,7 @@
 name: wp-starter-core-overrides
 description: Customize this theme's PHP behavior, hooks, template tags, and helpers without overwriting toolkit-owned core files.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.0.1 -->
 # Customize Theme Behavior
 
 Read [Core and overrides](../../core_and_overrides.md) and
@@ -25,6 +25,10 @@ Read [Core and overrides](../../core_and_overrides.md) and
 
 If the defect truly belongs to shared core, explain that ownership boundary.
 For toolkit maintainers, synchronize approved core changes to packaged resources
-and test update/rollback; do not silently turn a client customization into a
+and test update/rollback. Check the manifest against the actual packaged bytes
+without expanding core ownership to client paths. Required APIs need real,
+immediately available declarations, not imports or uncalled setup functions;
+static inspection does not replace runtime verification. Do not silently turn
+a client customization into a
 package release. Run relevant PHP/WPCS checks and regenerate POT after PHP
 changes, including changes that only move translation source lines.

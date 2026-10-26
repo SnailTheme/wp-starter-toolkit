@@ -77,6 +77,11 @@ final class BootstrapParser {
 			throw new RuntimeException( sprintf( 'Bootstrap file not found: %s', $bootstrapPath ) );
 		}
 
-		return (string) file_get_contents( $bootstrapPath );
+		$contents = @file_get_contents( $bootstrapPath );
+		if ( false === $contents ) {
+			throw new RuntimeException( sprintf( 'Could not read bootstrap file: %s', $bootstrapPath ) );
+		}
+
+		return $contents;
 	}
 }

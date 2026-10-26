@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.3.0 -->
+<!-- st-toolkit-agent-doc-version: 1.3.1 -->
 # Theme Agent Guide
 
 This file is the entrypoint for maintainers and coding agents working inside
@@ -61,6 +61,10 @@ permissions and workspace trust still apply; this setup changes neither.
 - Keep documentation and examples generator-safe.
 - Check `composer toolkit:ui-status` before assuming a Sass or Tailwind source
   layout.
+- Preview destructive toolkit operations and review the target paths before
+  confirmation. A manifest or successful command does not authorize changes
+  outside the operation's ownership boundary; use the toolkit/validation skills
+  when changing installers or package resources.
 - Treat the locked UI profile as the project's permanent styling foundation;
   replacement is an exceptional destructive migration.
 - Keep reusable blocks independent from the active UI profile.
