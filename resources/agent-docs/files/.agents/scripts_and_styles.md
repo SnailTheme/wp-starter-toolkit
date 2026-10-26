@@ -100,6 +100,11 @@ startup, so restart `npm run dev` after the one-time UI selection.
 `npm run build` runs a clean production build, removes stale outputs, and must
 always be run before committing.
 
+Include development/build tools when checking dependency security. Run
+`npm audit` and `composer audit --locked`, update affected lockfile entries,
+and rerun the build and code checks. A passing build does not establish that
+the installed dependency versions are free of known advisories.
+
 Core-owned asset sources live under:
 
 - `/assets/scss/core/`

@@ -32,6 +32,9 @@
 
 ### Validation
 
+- Agent guidance now includes npm and Composer security audits for development
+  tools. The theme's corresponding dependency/CI fixes are maintained in the
+  theme repository rather than bundled into toolkit core resources.
 - Toolkit PHP acceptance: 112 assertions.
 - Isolated Tailwind build/watch acceptance: 20 assertions.
 - Menu checks at 320, 390, 567, 568, 768, 1024, and 1440 px, including nested
