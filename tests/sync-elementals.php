@@ -16,7 +16,7 @@ $theme = $argv[1] ?? '';
 if ( ! is_file( $theme . '/core/bootstrap.php' ) ) {
 	throw new RuntimeException( 'Usage: php tests/sync-elementals.php /path/to/blocks-dev-theme' );
 }
-$members = array( 'wrapper', 'container', 'heading', 'text', 'columns', 'column', 'grid', 'grid-cell', 'content-with-image' );
+$members = array( 'wrapper', 'container', 'heading', 'text', 'columns', 'column', 'grid', 'grid-cell', 'content-with-image', 'faq' );
 $fs      = new Filesystem();
 $root    = dirname( __DIR__ ) . '/resources/blocks/';
 
@@ -37,6 +37,10 @@ foreach ( $members as $member ) {
 	if ( 'content-with-image' === $member ) {
 		$helpers[] = 'st_wp_core_generate_img';
 	}
+	if ( 'faq' === $member ) {
+		$helpers[] = 'st_wp_core_schema_register_block_provider';
+		$helpers[] = 'st_wp_core_schema_add_faq';
+	}
 	$theme_files = array();
 	if ( is_file( $theme . '/' . $acf_file ) ) {
 		$fs->mkdir( $package . '/theme-files/acf-json' );
@@ -49,8 +53,8 @@ foreach ( $members as $member ) {
 		'default_title' => $block['title'],
 		'source_namespace' => 'stwp',
 		'source_category' => 'st-wp-starter',
-		'bundle_only' => true,
-		'required_core_version' => '>=1.1.0',
+		'bundle_only' => 'faq' !== $member,
+		'required_core_version' => 'faq' === $member ? '>=1.2.0' : '>=1.1.0',
 		'required_php_helpers' => $helpers,
 		'npm_dependencies' => (object) array(),
 		'shared_assets' => array(),
@@ -58,4 +62,4 @@ foreach ( $members as $member ) {
 	);
 	$fs->dumpFile( $package . '/st-block.json', json_encode( $manifest, JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES | JSON_THROW_ON_ERROR ) . PHP_EOL );
 }
-fwrite( STDOUT, "Synchronized nine elemental blocks, ACF sources and compiled CSS.\n" );
+fwrite( STDOUT, "Synchronized ten elemental blocks, ACF sources and compiled CSS.\n" );

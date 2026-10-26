@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.2.0 -->
+<!-- st-toolkit-agent-doc-version: 1.3.0 -->
 # Blocks And ACF
 
 ## Namespace Map
@@ -28,6 +28,12 @@ Example:
 
 Each block should keep its PHP, `block.json`, and block assets inside its own
 directory.
+
+An optional `block-bootstrap.php` registers block-local integrations after
+successful block registration. Core loads it once from the trusted registered
+block directory. Keep registration side-effect free: no markup, direct schema
+output, or content rendering. A schema provider belongs here, not in the render
+template; see [Schemas and FAQ](schemas.md).
 
 ## Block Metadata
 
@@ -151,7 +157,8 @@ file after the generated group key.
 
 ## Elemental Compositions
 
-Install the foundation with `composer st-toolkit blocks:install elementals`.
+Install the ten-member foundation with
+`composer st-toolkit blocks:install elementals`.
 Its `el-*` slugs are fixed; only the configured namespace changes. A Section
 is rooted in `<namespace>/el-wrapper` and contains a meaningful elemental
 child, optionally inside `<namespace>/el-container`.
@@ -162,11 +169,14 @@ child, optionally inside `<namespace>/el-container`.
 - Container owns width/position, not background or automatic gutters.
 - Heading/Text own native content; Content With Image adds an ACF image, not
   duplicate ACF heading/body/button fields.
+- FAQ owns a self-contained ACF repeater, not InnerBlocks. Put an `el-heading`
+  before it when a section heading is needed; FAQ adds no container or section
+  styling. Its native details/summary interaction needs no JavaScript.
 - Columns accepts Column children; Grid accepts Grid Cell children. Use these
   elements instead of core Group/Row/Stack/Columns/Grid in our compositions.
   Do not globally disable WordPress layout blocks.
-- Keep one named `InnerBlocks` slot per element, including its `className`
-  wrapper in front-end/editor styles. Keep templates editable and heading
+- Keep one named `InnerBlocks` slot per content-composing element, including
+  its `className` wrapper in front-end/editor styles. Keep templates editable and heading
   levels under the native Heading block's control.
 - Keep ACF field definitions self-contained. No cross-block Clone groups or
   dependencies on Cynomi branding, source helpers, or legacy tabs code.
@@ -187,6 +197,43 @@ and clamp numeric ranges in render files. Custom CSS lengths must be finite and
 positive. Keep layout children shrinkable and allow long unbroken content to
 wrap inside the owned content root instead of hiding overflow or widening the
 page. Check the same cases in the iframe and frontend.
+
+## FAQ Element
+
+`<namespace>/el-faq` is the tenth Elementals member and is also available
+individually:
+
+```bash
+composer st-toolkit -- blocks:install el-faq el-faq --dry-run
+composer st-toolkit blocks:install el-faq el-faq
+```
+
+FAQ requires shared core `1.2.0` and its schema helpers. If installation rejects
+an older core, preview/apply `composer toolkit:core-update` first; do not bypass
+the minimum-version check. Installing FAQ alone must not replace siblings.
+Its manifest explicitly sets `bundle_only: false`; the original nine elements
+remain bundle-only with fixed slugs.
+
+Fields contain an items repeater with a plain-text question and a basic
+WYSIWYG answer, with media uploads disabled. Settings contain schema enabled
+and first item initially open; both default on. Preserve the Fields/Settings
+groups and repeater naming above. Do not add dummy groups to native-only
+elements to imitate FAQ.
+
+Use one block-local normalization path for visible content and early schema.
+Read raw ACF data without leaking or replacing ambient ACF/WordPress context;
+sanitize basic rich text without executing shortcodes or embeds. Incomplete
+rows show editor guidance but produce neither frontend rows nor schema.
+Register the provider in `block-bootstrap.php`; the render template must not
+try to add FAQ data after the head has been printed.
+
+Render native `<details>/<summary>` with a unique shared `name` per rendered
+instance. The first complete row opens by default and only one row opens at a
+time within that instance. ACF block IDs alone are not unique across identical
+duplicates or separate editor previews; do not use them alone as group names.
+Keep instances independent, keyboard-accessible, and useful without scripts.
+Use inherited typography, separators, wrapping, focus-visible treatment and an
+`[open]` CSS caret, without animation dependencies or accordion JavaScript.
 
 ## Block Styles
 
@@ -241,15 +288,26 @@ The current V1 build does not compile block JavaScript. `block.json` loads
 `editorScripts.js` and `viewScripts.js` directly, so keep those files
 browser-ready and run `node --check` after editing them.
 
+Declare script dependencies in the adjacent `editorScripts.asset.php` or
+`viewScripts.asset.php`, returning `dependencies` and `version`. A list of
+handles in `block.json` does not establish execution order. An ACF preview
+initializer depends on `acf-input` plus its actual library handles; use the
+source file timestamp for its cache version when no bundler supplies one.
+
 For Block API v3, editor scripts must handle iframe rendering:
 
 - Do not assume `.block-editor` contains the rendered block preview.
 - Do not rely only on `wp.domReady()`.
-- Observe the current document and same-origin iframe documents.
+- Use ACF's `render_block_preview` action for ACF previews. Its first argument
+  is a jQuery preview wrapper; resolve `[0].ownerDocument` rather than looking
+  for the markup in the parent editor shell. The action runs again after
+  replacement/cached previews. A parent-document observer alone misses iframe
+  body creation and can leave previews uninitialized.
 - Guard missing dependencies.
 - Skip instances that are already initialized.
 - Skip empty markup with no rendered items.
-- Catch initialization errors so one bad block does not break the editor.
+- Catch and report initialization errors so one bad block does not break the
+  editor, without silently masking a failed preview.
 
 Front-end scripts can usually initialize on `DOMContentLoaded`, but should use
 the same guards for missing dependencies, empty markup, and duplicate

@@ -1,5 +1,37 @@
 # Changelog
 
+## 1.4.0 (Unreleased)
+
+- Package shared core `1.2.0` with head-only schema registration, supplied
+  breadcrumb trails, early block providers, nested/synced content discovery,
+  safe JSON-LD encoding and independent SEO-plugin ownership.
+- Add native Elemental FAQ as the tenth bundle member and a standalone block.
+  Share raw ACF normalization between visible answers and schema; preserve
+  independent exclusive disclosures across duplicated/editor-cached previews.
+- Respect native Hide and viewport visibility during schema collection.
+  Viewport-conditioned synced references require a certified single root;
+  ambiguous output is skipped with a development diagnostic, never pre-rendered.
+- Add the schema guide, canonical schema skill and thin Claude adapter. Update
+  relevant agent workflows and exact ignore rules while retaining unchanged
+  guide versions. Docs updates remain separate from core/block installation.
+- Fix slider iframe initialization using ACF v3's preview-render lifecycle and
+  explicit library dependencies/cache versions in adjacent script asset files.
+- Preserve canonical titles during same-slug block installation and retain the
+  original nine Elementals' bundle-only restrictions.
+- Expand offline coverage to 1,637 assertions, plus the slider lifecycle test.
+  Generator smoke checks pass 492 assertions; a fresh custom-namespace project
+  passes all twelve setup/validation commands. WordPress runtime suites pass
+  across Bare, Blueprint and Tailwind, with 832 assertions on the development
+  theme. Production builds, PHP/WPCS, POT regeneration and dependency audits pass.
+- Actual runtime checks use WordPress 7.1.3, ACF PRO 6.8.10 and PHP 8.2.29 on
+  Linux/Brave at desktop/mobile widths. Gutenberg's core-variable iframe warning
+  and ACF's deprecated preference call remain upstream warnings, not suppressed
+  or patched vendor code. Other PHP/OS/browser combinations remain release gates.
+
+Merge reviewed `next` into `main` before tagging `v1.4.0`. Existing tags remain
+immutable. Publish the toolkit tag before changing the clean theme dependency;
+installed block/ACF fixtures stay on `blocks-dev`, never release-theme branches.
+
 ## 1.3.0
 
 - Add the nine-block Elemental Foundation bundle with namespace-aware ACF keys,

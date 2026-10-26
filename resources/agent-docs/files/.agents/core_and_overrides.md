@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.0 -->
 # Core And Overrides
 
 ## Directory Roles
@@ -39,6 +39,7 @@ Common pairs:
 - `/core/scripts.php` -> `/inc/scripts.php`
 - `/core/template-tags.php` -> `/inc/template-tags.php`
 - `/core/template-functions.php` -> `/inc/template-functions.php`
+- `/core/schema.php` -> `/inc/schema.php`
 - `/core/woocommerce.php` -> `/inc/woocommerce.php`
 - `/core/jetpack.php` -> `/inc/jetpack.php`
 
@@ -60,3 +61,12 @@ add_filter( 'st_wp_core_enable_plugin_suggestions_notice', '__return_false' );
 
 Use `st_wp_core_files` or `st_wp_core_should_load_file` only when an entire core
 module should not load.
+
+## Schema Ownership
+
+Shared core `1.2.0` adds the head-only schema registry in `/core/schema.php`.
+Use `/inc/schema.php` for project schema policy and guarded overrides, not a
+second output registry. Use the global/per-type disable hooks and final graph
+filter exposed by that module when filters are sufficient. Leave SEO-plugin
+output alone unless the project explicitly chooses otherwise. See
+[Schemas and FAQ](schemas.md) for timing, providers, and ownership rules.

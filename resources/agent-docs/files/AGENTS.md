@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.2.0 -->
+<!-- st-toolkit-agent-doc-version: 1.3.0 -->
 # Theme Agent Guide
 
 This file is the entrypoint for maintainers and coding agents working inside
@@ -32,6 +32,7 @@ The current namespace line is refreshed by `composer st-toolkit init` or
 - [Style guidelines](.agents/style_guidelines.md)
 - [Template tags and helpers](.agents/template_tags_and_helpers.md)
 - [Blocks and ACF](.agents/blocks_and_acf.md)
+- [Schemas and FAQ](.agents/schemas.md)
 - [CLI and toolkit](.agents/cli_and_toolkit.md)
 
 ## Task Skills
@@ -40,6 +41,7 @@ Load the workflow matching the task, then only its relevant guides:
 
 - [Compose elemental sections](.agents/skills/wp-starter-elemental-sections/SKILL.md)
 - [Develop reusable blocks](.agents/skills/wp-starter-block-development/SKILL.md)
+- [Add or change structured data](.agents/skills/wp-starter-schemas/SKILL.md)
 - [Work with assets](.agents/skills/wp-starter-assets/SKILL.md)
 - [Customize core behavior safely](.agents/skills/wp-starter-core-overrides/SKILL.md)
 - [Operate the toolkit](.agents/skills/wp-starter-toolkit/SKILL.md)
@@ -65,6 +67,9 @@ permissions and workspace trust still apply; this setup changes neither.
 - Compose Sections from the `el-*` foundation, rooted in `el-wrapper`, with an
   optional `el-container`; native-only elements need no dummy ACF fields. Read
   the Blocks and ACF guide before adding elemental or section compositions.
+- Register supplied breadcrumb trails before `get_header()`. Schema-producing
+  blocks use the early provider contract, not render-time registration. Read
+  the Schemas and FAQ guide before changing structured data or FAQ content.
 
 ## Local-Only Notes
 

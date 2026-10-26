@@ -31,6 +31,7 @@ final class AgentDocsInstaller {
 		'/CLAUDE.md',
 		'/.claude/skills/wp-starter-elemental-sections/',
 		'/.claude/skills/wp-starter-block-development/',
+		'/.claude/skills/wp-starter-schemas/',
 		'/.claude/skills/wp-starter-assets/',
 		'/.claude/skills/wp-starter-core-overrides/',
 		'/.claude/skills/wp-starter-toolkit/',

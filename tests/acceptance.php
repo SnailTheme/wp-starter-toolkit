@@ -121,6 +121,10 @@ try {
 		)
 	);
 	$replacementEngine = new ReplacementEngine();
+	foreach ( array( 'Elemental FAQ', 'FAQ Section' ) as $title ) {
+		$blockManifest = array( 'source_slug' => 'el-faq', 'source_namespace' => 'stwp', 'default_title' => $title );
+		acceptance_assert( $title === $replacementEngine->applyBlockPatterns( $title, $blockManifest, 'el-faq', $patterns ), 'Same-slug block install must preserve its canonical title exactly.' );
+	}
 	$replaced          = $replacementEngine->applyThemePatterns( $source, $patterns );
 
 	acceptance_assert( str_contains( $replaced, 'https://github.com/acme-inc/acme-acceptance' ), 'Repository URL was not replaced from git_repo.' );
@@ -211,7 +215,7 @@ TEXT;
 	$bootstrapContents = $replacementEngine->applyThemePatterns( (string) file_get_contents( $bootstrap ), $patterns );
 	$filesystem->dumpFile(
 		$bootstrap,
-		str_replace( "define( 'ST_WP_CORE_VERSION', '1.1.0' );", "define( 'ST_WP_CORE_VERSION', '1.0.0' );", $bootstrapContents )
+		str_replace( "define( 'ST_WP_CORE_VERSION', '1.2.0' );", "define( 'ST_WP_CORE_VERSION', '1.0.0' );", $bootstrapContents )
 	);
 	$filesystem->dumpFile( $coreFile, "<?php\n// Acceptance rollback marker.\n" . substr( (string) file_get_contents( $coreFile ), 6 ) );
 	$filesystem->remove( $themePath . '/core/customizer/animatecss.php' );
@@ -229,7 +233,7 @@ TEXT;
 	$theme        = ( new ThemeDetector() )->detect( $themePath );
 	$docsManifest = AgentDocsManifest::load();
 
-	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own 1.2.0 content version.' );
+	acceptance_assert( '1.3.0' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own content version.' );
 	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/scripts_and_styles.md' ), 'Changed asset guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/style_guidelines.md' ), 'Changed style guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.0.0' === $docsManifest->fileVersion( '.agents/template_tags_and_helpers.md' ), 'Unchanged helper guide was unnecessarily versioned as changed.' );
@@ -245,18 +249,18 @@ TEXT;
 	$docsChanges   = array_column( $docsPlan['changes'], null, 'path' );
 
 	acceptance_assert( 'update' === $docsChanges['AGENTS.md']['action'], 'Changed agent guide was not planned for update.' );
-	acceptance_assert( '1.2.0' === $docsChanges['AGENTS.md']['target_version'], 'Agent guide plan did not expose its file-specific target version.' );
+	acceptance_assert( '1.3.0' === $docsChanges['AGENTS.md']['target_version'], 'Agent guide plan did not expose its file-specific target version.' );
 	acceptance_assert( 'skip' === $docsChanges['.agents/template_tags_and_helpers.md']['action'], 'Unchanged current-version helper guide was planned for update.' );
 	acceptance_assert( '1.0.0' === $docsChanges['.agents/template_tags_and_helpers.md']['target_version'], 'Helper guide plan used the package-wide version instead of its content version.' );
 
 	$docsInstaller->install( $theme );
-	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/AGENTS.md' ), '1.2.0' ), 'Changed agent guide did not update.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/AGENTS.md' ), '1.3.0' ), 'Changed agent guide did not update.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/.agents/template_tags_and_helpers.md' ), 'Current Helper Guide Sentinel' ), 'Unchanged helper guide was rewritten.' );
 
 	$updated = ( new CoreUpdater() )->update( $theme );
 
 	acceptance_assert( is_file( $themePath . '/core/customizer/animatecss.php' ), 'Core update did not add a missing owned file.' );
-	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'1.1.0'" ), 'Core update did not install the packaged version.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'1.2.0'" ), 'Core update did not install the packaged version.' );
 	acceptance_assert( is_file( $themePath . '/core/components.php' ), 'Core update did not install the shared component loader.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/core/components.php' ), 'RecursiveDirectoryIterator' ), 'Core component loader does not discover nested toolkit integrations.' );
 	acceptance_assert( is_file( $themePath . '/inc/acceptance-sentinel.php' ), 'Core update touched /inc/.' );
@@ -340,6 +344,12 @@ TEXT;
 	acceptance_assert( $blockTempBefore === $blockTempAfter, 'Block installer left transformed files in temporary storage.' );
 
 	$blockPath = $themePath . '/blocks/acme-hero-slider';
+	foreach ( array( 'editorScripts', 'viewScripts' ) as $entry ) {
+		$asset = require $blockPath . '/assets/js/' . $entry . '.asset.php';
+		$dependencies = 'editorScripts' === $entry ? array( 'acf-input', 'plugins.splidejs.splide' ) : array( 'plugins.splidejs.splide' );
+		acceptance_assert( $dependencies === $asset['dependencies'], $entry . ': missing explicit preview/library dependency after installation.' );
+		acceptance_assert( filemtime( $blockPath . '/assets/js/' . $entry . '.js' ) === $asset['version'], $entry . ': source cache version is stale.' );
+	}
 	$acfFiles  = glob( $themePath . '/acf-json/*.json' ) ?: array();
 	$blockJson = (string) file_get_contents( $blockPath . '/block.json' );
 	$renderPhp = (string) file_get_contents( $blockPath . '/block-render.php' );

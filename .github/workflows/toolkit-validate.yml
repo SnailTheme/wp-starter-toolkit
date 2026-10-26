@@ -39,6 +39,14 @@ jobs:
       - name: Run acceptance checks
         run: composer test:acceptance
 
+      - name: Set up Node
+        uses: actions/setup-node@v4
+        with:
+          node-version: '24'
+
+      - name: Check slider editor lifecycle
+        run: node tests/slider-editor.cjs
+
       - name: Build smoke-test fixture
         run: |
           mkdir -p /tmp/st-toolkit-fixture
@@ -60,5 +68,6 @@ jobs:
           php bin/st-toolkit components:install mega-menu --theme=/tmp/st-toolkit-fixture --dry-run
           php bin/st-toolkit blocks:list
           php bin/st-toolkit blocks:install elementals --theme=/tmp/st-toolkit-fixture --dry-run --json
+          php bin/st-toolkit blocks:install el-faq el-faq --theme=/tmp/st-toolkit-fixture --dry-run --json
           php bin/st-toolkit blocks:install slider hero-slider --theme=/tmp/st-toolkit-fixture --dry-run
           php bin/st-toolkit doctor --theme=/tmp/st-toolkit-fixture

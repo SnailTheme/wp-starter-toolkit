@@ -131,8 +131,8 @@ final class ReplacementEngine {
 			'"category": "' . $targetTextDomain . '"' => '"category": "' . $targetCategory . '"',
 			"'category' => '" . $targetTextDomain . "'" => "'category' => '" . $targetCategory . "'",
 			(string) ( $manifest['source_category'] ?? 'st-wp-starter' ) => $targetCategory,
-			$sourceTitle                        => $targetTitle . ( str_ends_with( $sourceTitle, ' Section' ) ? ' Section' : '' ),
-			ucwords( str_replace( '-', ' ', $sourceSlug ) ) => $targetTitle,
+			$sourceTitle                        => $destinationSlug === $sourceSlug ? $sourceTitle : $targetTitle . ( str_ends_with( $sourceTitle, ' Section' ) ? ' Section' : '' ),
+			ucwords( str_replace( '-', ' ', $sourceSlug ) ) => $destinationSlug === $sourceSlug ? ucwords( str_replace( '-', ' ', $sourceSlug ) ) : $targetTitle,
 		);
 
 		$contents = $this->replaceLongestFirst( $contents, $map );

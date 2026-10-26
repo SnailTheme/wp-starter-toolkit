@@ -130,7 +130,7 @@ final class BlockInstaller {
 		if ( ! $plan['core_version_satisfied'] ) {
 			throw new RuntimeException(
 				sprintf(
-					'Block "%s" requires core %s. Installed core is %s.',
+					'Block "%s" requires core %s. Installed core is %s. Run composer toolkit:core-update first.',
 					$manifest->sourceSlug(),
 					$manifest->requiredCoreVersion(),
 					$theme->coreVersion

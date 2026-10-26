@@ -1,0 +1,19 @@
+{
+    "schema": 1,
+    "source_slug": "el-faq",
+    "default_title": "Elemental FAQ",
+    "source_namespace": "stwp",
+    "source_category": "st-wp-starter",
+    "bundle_only": false,
+    "required_core_version": ">=1.2.0",
+    "required_php_helpers": [
+        "st_wp_core_get_block_wrapper_attributes",
+        "st_wp_core_schema_register_block_provider",
+        "st_wp_core_schema_add_faq"
+    ],
+    "npm_dependencies": {},
+    "shared_assets": [],
+    "theme_files": [
+        "acf-json/group_stwp_el_faq.json"
+    ]
+}

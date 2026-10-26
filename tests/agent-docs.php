@@ -28,6 +28,7 @@ $rules = array(
 	'/CLAUDE.md',
 	'/.claude/skills/wp-starter-elemental-sections/',
 	'/.claude/skills/wp-starter-block-development/',
+	'/.claude/skills/wp-starter-schemas/',
 	'/.claude/skills/wp-starter-assets/',
 	'/.claude/skills/wp-starter-core-overrides/',
 	'/.claude/skills/wp-starter-toolkit/',
@@ -105,10 +106,15 @@ try {
 	$theme = agent_docs_theme( $temp . '/theme' );
 	$manifest = AgentDocsManifest::load();
 	$installer = new AgentDocsInstaller( $manifest );
-	agent_docs_assert( 20 === count( $manifest->files() ), 'Expected all 20 managed files.' );
+	agent_docs_assert( 23 === count( $manifest->files() ), 'Expected all 23 managed files.' );
+	agent_docs_assert( '1.3.0' === $manifest->version(), 'Docs cleanup unexpectedly bumped the package release version.' );
+	$schemaFiles = array( '.agents/schemas.md', '.agents/skills/wp-starter-schemas/SKILL.md', '.claude/skills/wp-starter-schemas/SKILL.md' );
+	foreach ( $schemaFiles as $relative ) {
+		agent_docs_assert( in_array( $relative, $manifest->files(), true ) && '1.0.0' === $manifest->fileVersion( $relative ), 'New schema guidance is absent or not at its initial file version: ' . $relative );
+	}
 	$ignoreBefore = "# Project rules\n/vendor/\n/AGENTS.md\n";
 	$fs->dumpFile( $theme->resolve( '.gitignore' ), $ignoreBefore );
-	$customClaude = array( '.claude/settings.json' => '{"project":true}', '.claude/skills/project-only/SKILL.md' => '# Project-owned skill', '.claude/skills/wp-starter-deploy/SKILL.md' => '# Project-owned deployment skill', '.claude/CLAUDE.md' => '# Project-owned Claude notes' );
+	$customClaude = array( '.claude/settings.json' => '{"project":true}', '.claude/skills/project-only/SKILL.md' => '# Project-owned skill', '.claude/skills/wp-starter-deploy/SKILL.md' => '# Project-owned deployment skill', '.claude/skills/wp-starter-schemas-custom/SKILL.md' => '# Project-owned schema skill', '.claude/CLAUDE.md' => '# Project-owned Claude notes' );
 	foreach ( $customClaude as $path => $contents ) {
 		$fs->dumpFile( $theme->resolve( $path ), $contents );
 	}
@@ -123,23 +129,30 @@ try {
 		agent_docs_assert( str_replace( '<current_block_namespace>', 'acme', $source ) === $installed, 'Installed bytes/namespace differ from the managed source: ' . $relative );
 		agent_docs_assert( ! str_contains( $installed, '<current_block_namespace>' ), 'Namespace placeholder survived installation: ' . $relative );
 		if ( str_ends_with( $relative, '/SKILL.md' ) ) {
-			agent_docs_assert( '1.0.0' === $manifest->fileVersion( $relative ), 'New skill version was not 1.0.0.' );
-			agent_docs_assert( 1 === preg_match( '/\A---\r?\n(.*?)\r?\n---\r?\n/s', $source, $header ) && str_starts_with( $installed, $header[0] . $marker ), 'YAML is not first, or the version marker is not immediately after unchanged frontmatter: ' . $relative );
+			$skillMarker = '<!-- st-toolkit-agent-doc-version: ' . $manifest->fileVersion( $relative ) . ' -->';
+			agent_docs_assert( 1 === preg_match( '/\A---\r?\n(.*?)\r?\n---\r?\n/s', $source, $header ) && str_starts_with( $installed, $header[0] . $skillMarker ), 'YAML is not first, or the version marker is not immediately after unchanged frontmatter: ' . $relative );
 			agent_docs_assert( 1 === preg_match( '/^name: wp-starter-[a-z-]+$/m', $header[1] ) && 1 === preg_match( '/^description: \S.+$/m', $header[1] ), 'Skill name/description is missing from YAML frontmatter.' );
 			// These resources use plain, single-line YAML scalars. Exclude YAML
 			// mapping/comment separators which would silently change their type.
 			preg_match( '/^description: (.+)$/m', $header[1], $description );
 			agent_docs_assert( ! preg_match( '/:\s|\s#/', $description[1] ), 'Plain YAML description contains an unquoted mapping/comment separator.' );
-			preg_match_all( '/\[[^\]]+\]\(([^)]+)\)/', $installed, $links );
-			foreach ( $links[1] as $link ) {
-				agent_docs_assert( false !== realpath( dirname( $theme->resolve( $relative ) ) . '/' . $link ), 'Installed skill/adapter link does not resolve: ' . $relative . ' -> ' . $link );
-			}
 			if ( str_starts_with( $relative, '.claude/' ) ) {
 				$canonical = '../../../.agents/skills/' . basename( dirname( $relative ) ) . '/SKILL.md';
 				agent_docs_assert( str_contains( $installed, '(' . $canonical . ')' ), 'Claude adapter does not link to its canonical workflow.' );
 			}
 		}
+		preg_match_all( '/\[[^\]]+\]\(([^)]+)\)/', $installed, $links );
+		foreach ( $links[1] as $link ) {
+			if ( preg_match( '#^https?://#', $link ) ) {
+				continue;
+			}
+			agent_docs_assert( false !== realpath( dirname( $theme->resolve( $relative ) ) . '/' . $link ), 'Installed guide/skill/adapter link does not resolve: ' . $relative . ' -> ' . $link );
+		}
 	}
+	$entrypoint = (string) file_get_contents( $theme->resolve( 'AGENTS.md' ) );
+	agent_docs_assert( str_contains( $entrypoint, '(.agents/schemas.md)' ) && str_contains( $entrypoint, '(.agents/skills/wp-starter-schemas/SKILL.md)' ), 'Schema guide/skill are not discoverable from the agent entrypoint.' );
+	$schemaSkill = (string) file_get_contents( $theme->resolve( '.agents/skills/wp-starter-schemas/SKILL.md' ) );
+	agent_docs_assert( str_contains( $schemaSkill, '(../../schemas.md)' ), 'Schema workflow does not route to the focused guide.' );
 	agent_docs_assert( str_contains( (string) file_get_contents( $theme->resolve( 'CLAUDE.md' ) ), "\n@AGENTS.md\n" ), 'Native CLAUDE.md import is missing.' );
 	$ignore = (string) file_get_contents( $theme->resolve( '.gitignore' ) );
 	agent_docs_assert( str_starts_with( $ignore, $ignoreBefore ), 'Existing ignore rules were replaced.' );
@@ -156,9 +169,9 @@ try {
 		$git = new Process( array( 'git', '-c', 'init.templateDir=', 'init', '--quiet', $theme->path ) );
 		$git->mustRun();
 		$git = new Process( array( 'git', '-c', 'core.excludesFile=' . $temp . '/empty-global-ignore', 'check-ignore', '--no-index', '--stdin' ), $theme->path );
-		$git->setInput( "CLAUDE.md\n.claude/skills/wp-starter-assets/SKILL.md\n.claude/settings.json\n.claude/skills/project-only/SKILL.md\n.claude/skills/wp-starter-deploy/SKILL.md\n" );
+		$git->setInput( "CLAUDE.md\n.claude/skills/wp-starter-assets/SKILL.md\n.claude/skills/wp-starter-schemas/SKILL.md\n.claude/settings.json\n.claude/skills/project-only/SKILL.md\n.claude/skills/wp-starter-deploy/SKILL.md\n.claude/skills/wp-starter-schemas-custom/SKILL.md\n" );
 		$git->mustRun();
-		agent_docs_assert( array( 'CLAUDE.md', '.claude/skills/wp-starter-assets/SKILL.md' ) === preg_split( '/\R/', trim( $git->getOutput() ) ), 'Native Git ignore matching hid unrelated Claude files.' );
+		agent_docs_assert( array( 'CLAUDE.md', '.claude/skills/wp-starter-assets/SKILL.md', '.claude/skills/wp-starter-schemas/SKILL.md' ) === preg_split( '/\R/', trim( $git->getOutput() ) ), 'Native Git ignore matching missed schema guidance or hid unrelated Claude files.' );
 	}
 
 	foreach ( array( false, true ) as $force ) {
@@ -189,9 +202,9 @@ try {
 				if ( "\r" !== $ending && null !== ( new ExecutableFinder() )->find( 'git' ) ) {
 					( new Process( array( 'git', '-c', 'init.templateDir=', 'init', '--quiet', $migrationTheme->path ) ) )->mustRun();
 					$git = new Process( array( 'git', '-c', 'core.excludesFile=' . $temp . '/empty-global-ignore', 'check-ignore', '--no-index', '--stdin' ), $migrationTheme->path );
-					$git->setInput( ".claude/skills/wp-starter-assets/SKILL.md\n.claude/skills/wp-starter-deploy/SKILL.md\n.claude/settings.json\n.claude/skills/project-only/SKILL.md\n" );
+					$git->setInput( ".claude/skills/wp-starter-assets/SKILL.md\n.claude/skills/wp-starter-schemas/SKILL.md\n.claude/skills/wp-starter-schemas-custom/SKILL.md\n.claude/skills/wp-starter-deploy/SKILL.md\n.claude/settings.json\n.claude/skills/project-only/SKILL.md\n" );
 					$git->mustRun();
-					agent_docs_assert( '.claude/skills/wp-starter-assets/SKILL.md' === trim( $git->getOutput() ), 'Migrated Git ignores still hide custom Claude skills/settings.' );
+					agent_docs_assert( array( '.claude/skills/wp-starter-assets/SKILL.md', '.claude/skills/wp-starter-schemas/SKILL.md' ) === preg_split( '/\R/', trim( $git->getOutput() ) ), 'Migrated Git ignores missed schema guidance or still hide custom Claude skills/settings.' );
 				}
 				$before = agent_docs_snapshot( $migrationTheme->path );
 				$repeat = $installer->install( $migrationTheme, $force );
@@ -200,18 +213,37 @@ try {
 		}
 	}
 
-	$editedGuides = array( 'AGENTS.md', '.agents/blocks_and_acf.md', '.agents/cli_and_toolkit.md' );
-	foreach ( $editedGuides as $relative ) {
-		$fs->dumpFile( $theme->resolve( $relative ), "<!-- st-toolkit-agent-doc-version: 1.1.0 -->\n# Previously installed guide\n" );
+	$editedGuides = array(
+		'AGENTS.md' => '1.2.0',
+		'.agents/core_and_overrides.md' => '1.1.0',
+		'.agents/blocks_and_acf.md' => '1.2.0',
+		'.agents/cli_and_toolkit.md' => '1.2.0',
+		'.agents/skills/wp-starter-elemental-sections/SKILL.md' => '1.0.0',
+		'.agents/skills/wp-starter-block-development/SKILL.md' => '1.0.0',
+		'.agents/skills/wp-starter-validation/SKILL.md' => '1.0.0',
+	);
+	foreach ( $editedGuides as $relative => $previousVersion ) {
+		$header = str_ends_with( $relative, '/SKILL.md' ) ? "---\nname: previously-installed-skill\n---\n" : '';
+		$fs->dumpFile( $theme->resolve( $relative ), $header . '<!-- st-toolkit-agent-doc-version: ' . $previousVersion . " -->\n# Previously installed guide\n" );
 	}
 	$upgrades = array_column( $installer->plan( $theme )['changes'], null, 'path' );
-	foreach ( $editedGuides as $relative ) {
-		agent_docs_assert( 'update' === $upgrades[ $relative ]['action'] && '1.2.0' === $upgrades[ $relative ]['target_version'], 'Edited guide did not automatically upgrade from 1.1.0 to 1.2.0: ' . $relative );
+	foreach ( $editedGuides as $relative => $previousVersion ) {
+		agent_docs_assert( 'update' === $upgrades[ $relative ]['action'] && version_compare( $upgrades[ $relative ]['target_version'], $previousVersion, '>' ), 'Edited guide/skill did not automatically upgrade from its previous version: ' . $relative );
 	}
 	$installer->install( $theme );
-	foreach ( $editedGuides as $relative ) {
+	foreach ( array_keys( $editedGuides ) as $relative ) {
 		$expected = str_replace( '<current_block_namespace>', 'acme', (string) file_get_contents( $manifest->filesRoot() . '/' . $relative ) );
 		agent_docs_assert( $expected === file_get_contents( $theme->resolve( $relative ) ), 'Normal update did not install the edited guide without force: ' . $relative );
+	}
+	foreach ( $schemaFiles as $relative ) {
+		$custom = str_replace( $marker . "\n", '', (string) file_get_contents( $theme->resolve( $relative ) ) ) . "\nProject customization.\n";
+		$fs->dumpFile( $theme->resolve( $relative ), $custom );
+		foreach ( array( false, true ) as $force ) {
+			$change = array_column( $installer->plan( $theme, $force )['changes'], null, 'path' )[ $relative ];
+			agent_docs_assert( 'skip' === $change['action'] && 'customized-no-version-marker' === $change['reason'], 'Markerless schema instructions were not developer-owned: ' . $relative );
+			$installer->install( $theme, $force );
+			agent_docs_assert( $custom === file_get_contents( $theme->resolve( $relative ) ), 'Schema instructions were overwritten after marker removal: ' . $relative );
+		}
 	}
 
 	$skill = '.agents/skills/wp-starter-assets/SKILL.md';
@@ -379,7 +411,7 @@ try {
 	$fs->dumpFile( $cliTheme->resolve( '.gitignore' ), "# CLI project rules\n" . $legacyRule . "\n" );
 	$before = agent_docs_snapshot( $cliTheme->path );
 	$dry = agent_docs_cli( array( 'init', '--theme=' . $cliTheme->path, '--dry-run', '--json' ) );
-	agent_docs_assert( 0 === $dry['status'] && true === $dry['json']['dry_run'] && 20 === count( $dry['json']['changes'] ), 'Init dry-run JSON interface regressed.' );
+	agent_docs_assert( 0 === $dry['status'] && true === $dry['json']['dry_run'] && 23 === count( $dry['json']['changes'] ), 'Init dry-run JSON interface regressed.' );
 	agent_docs_assert( array( $legacyRule ) === $dry['json']['gitignore']['obsolete_lines'], 'Init dry-run did not report the legacy ignore migration.' );
 	agent_docs_assert( $before === agent_docs_snapshot( $cliTheme->path ), 'CLI dry-run wrote files.' );
 	$cancel = agent_docs_cli( array( 'docs:update', '--theme=' . $cliTheme->path, '--no-interaction' ) );

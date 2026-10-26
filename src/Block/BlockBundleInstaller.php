@@ -361,7 +361,7 @@ final class BlockBundleInstaller {
 
 	private function assertCore( ThemeContext $theme, string $slug, string $constraint ): void {
 		if ( ! $this->versions->satisfies( $theme->coreVersion, $constraint ) ) {
-			throw new RuntimeException( sprintf( 'Bundle/member "%s" requires core %s. Installed core is %s. Update core explicitly before installing.', $slug, $constraint, $theme->coreVersion ) );
+			throw new RuntimeException( sprintf( 'Bundle/member "%s" requires core %s. Installed core is %s. Update core explicitly with composer toolkit:core-update before installing.', $slug, $constraint, $theme->coreVersion ) );
 		}
 	}
 
