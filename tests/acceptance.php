@@ -176,6 +176,8 @@ try {
 	$docsManifest = AgentDocsManifest::load();
 
 	acceptance_assert( '1.1.0' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own 1.1.0 content version.' );
+	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/scripts_and_styles.md' ), 'Changed asset guide did not receive its own 1.2.0 content version.' );
+	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/style_guidelines.md' ), 'Changed style guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.0.0' === $docsManifest->fileVersion( '.agents/template_tags_and_helpers.md' ), 'Unchanged helper guide was unnecessarily versioned as changed.' );
 
 	$filesystem->dumpFile( $themePath . '/AGENTS.md', "<!-- st-toolkit-agent-doc-version: 1.0.0 -->\n# Old Agent Guide\n" );
@@ -399,9 +401,10 @@ try {
 
 	$tailwindPlan = $uiInstaller->plan( $theme, UIProfileManifest::load( 'tailwind' ) );
 	$tailwindChanges = array_column( $tailwindPlan['changes'], 'path' );
+	acceptance_assert( '1.1.0' === UIProfileManifest::load( 'tailwind' )->version(), 'Tailwind modular-source profile version was not updated.' );
 	acceptance_assert( in_array( 'assets/styles/main.css', $tailwindChanges, true ), 'Tailwind profile did not plan its front-end CSS entry.' );
 	acceptance_assert( in_array( 'assets/styles/editor.css', $tailwindChanges, true ), 'Tailwind profile did not plan its editor CSS entry.' );
-	acceptance_assert( in_array( 'assets/styles/theme/_theme.css', $tailwindChanges, true ), 'Tailwind profile did not include its import-only theme module.' );
+	acceptance_assert( in_array( 'assets/styles/abstracts/_root.css', $tailwindChanges, true ), 'Tailwind profile did not include its shared root-variable module.' );
 	acceptance_assert( in_array( 'assets/styles/styles-enqueue/auto-enqueued-style.css', $tailwindChanges, true ), 'Tailwind profile did not include its native auto-enqueued entry.' );
 	acceptance_assert( in_array( 'assets/styles/styles-register/auto-registered-style.css', $tailwindChanges, true ), 'Tailwind profile did not include its native auto-registered entry.' );
 	acceptance_assert( '^4.3.2' === $tailwindPlan['npm_dev_dependencies']['tailwindcss'], 'Tailwind profile did not require the tested Tailwind release.' );
@@ -411,7 +414,7 @@ try {
 	$tailwindMain = (string) file_get_contents( $tailwindPreparedPath . '/assets/styles/main.css' );
 	$tailwindAutoEntry = (string) file_get_contents( $tailwindPreparedPath . '/assets/styles/styles-enqueue/auto-enqueued-style.css' );
 	acceptance_assert( str_contains( $tailwindMain, '@source not "../../assets/js"' ), 'Tailwind profile did not exclude generated JavaScript from source detection.' );
-	acceptance_assert( str_contains( $tailwindMain, '@import "./theme/_theme.css"' ), 'Tailwind profile did not import its modular theme source.' );
+	acceptance_assert( str_contains( $tailwindMain, '@import "./abstracts/_root.css"' ), 'Tailwind profile did not import its shared root-variable source.' );
 	acceptance_assert( str_contains( $tailwindAutoEntry, '@reference "../main.css"' ), 'Tailwind auto-enqueued entry did not reference the main Tailwind context.' );
 	unset( $uiInstaller );
 	acceptance_assert( ! is_dir( $tailwindPreparedPath ), 'UI profile installer left transformed files in temporary storage.' );

@@ -30,7 +30,10 @@
 	 * @return {HTMLElement[]} Focusable elements currently visible to the user.
 	 */
 	const visibleFocusable = ( container ) => [ ...container.querySelectorAll( focusableSelector ) ]
-		.filter( ( element ) => ! element.hidden && null !== element.offsetParent );
+		.filter( ( element ) => ! element.closest( '[inert]' )
+			&& ! element.hidden
+			&& null !== element.offsetParent
+			&& 'hidden' !== window.getComputedStyle( element ).visibility );
 
 	/**
 	 * Build a mobile drawer header inside one submenu list.
@@ -172,15 +175,13 @@
 					}, 180 );
 				} );
 
-				item.addEventListener( 'focusin', () => {
-					if ( desktop ) {
-						openDesktopPanel( record );
-					}
-				} );
-
 				item.addEventListener( 'focusout', ( event ) => {
 					if ( desktop && ! item.contains( event.relatedTarget ) ) {
-						window.setTimeout( () => closeDesktopPanel( record ), 0 );
+						window.setTimeout( () => {
+							if ( ! item.contains( document.activeElement ) ) {
+								closeDesktopPanel( record );
+								}
+						}, 0 );
 					}
 				} );
 
@@ -240,7 +241,7 @@
 		 * @param {Object} record Top-level panel record.
 		 */
 		function closeDesktopPanel( record ) {
-			if ( ! record.isTop ) {
+			if ( ! desktop || ! record.isTop ) {
 				return;
 			}
 

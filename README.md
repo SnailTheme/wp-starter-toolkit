@@ -241,6 +241,37 @@ production build. Component manifests state their required core version, and
 installation stops with a `core:update` instruction when the loader/API is too
 old.
 
+## Maintainer Validation
+
+Run the package checks before publishing:
+
+```bash
+composer validate --strict
+composer test:acceptance
+```
+
+For Tailwind profile or compiler changes, use an installed Tailwind theme with
+its npm dependencies available:
+
+```bash
+node tests/tailwind-build-acceptance.mjs /path/to/tailwind-theme
+```
+
+The isolated fixture verifies shared root variables, imported partials, native
+nesting and `@apply`, standalone CSS entries, parallel Sass, deterministic
+output, conflict preservation, and watcher discovery without changing that
+theme. Set `ST_KEEP_TAILWIND_FIXTURE=1` to retain the temporary fixture when
+investigating a failure.
+
+`tests/mega-menu-browser-acceptance.js` contains a browser function for the
+local seeded Mega Menu Demo hierarchy. Run it through a browser evaluator at
+desktop and mobile sizes, including reduced-motion mode. The expected demo
+paths include Products/Platform, Services/Strategy, and
+Explore/Build/Front-end/CSS Architecture.
+
+See [the changelog](CHANGELOG.md) for the pending release and its validation
+limits. Resource versions and package release tags are independent.
+
 ## Relationship To The Theme
 
 The canonical source theme is `SnailTheme/wp-starter`.
