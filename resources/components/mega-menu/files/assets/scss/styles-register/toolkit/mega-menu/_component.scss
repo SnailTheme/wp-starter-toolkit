@@ -832,6 +832,6 @@ $container-width: 82.5rem !default;
 	.st-toolkit-mega-menu-enabled *::before,
 	.st-toolkit-mega-menu-enabled *::after {
 		scroll-behavior: auto !important;
-		transition-duration: 0.01ms !important;
+		transition: none !important;
 	}
 }

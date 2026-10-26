@@ -2,7 +2,7 @@
   "slug": "tailwind",
   "title": "Tailwind CSS",
   "description": "Tailwind CSS v4 compiled from native CSS with the official Vite plugin.",
-  "version": "1.0.0",
+  "version": "1.1.0",
   "npm_dev_dependencies": {
     "tailwindcss": "^4.3.2",
     "@tailwindcss/vite": "^4.3.2"

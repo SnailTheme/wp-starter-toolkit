@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.0 -->
 # Scripts And Styles
 
 ## Source And Build Paths
@@ -53,10 +53,18 @@ file below `/assets/styles/` as an independent entry and preserves its relative
 path below `/assets/css/`. Files beginning with `_` are import-only partials and
 do not produce standalone output.
 
+Keep Tailwind source modular in the same way as Sass source. The default
+`/assets/styles/abstracts/_root.css` module contains shared design tokens and
+root custom properties and is imported by both `main.css` and `editor.css`.
+Base, component, utility, and editor rules remain in their respective partial
+directories. Vite bundles those imports into the entry that uses them; it does
+not require all source rules to live in one file.
+
 Examples:
 
 - `/assets/styles/main.css` -> `/assets/css/main.min.css`
 - `/assets/styles/styles-enqueue/page-special.css` -> `/assets/css/styles-enqueue/page-special.min.css`
+- `/assets/styles/abstracts/_root.css` -> imported by `main.css` and `editor.css`, with no standalone output
 - `/assets/styles/components/_buttons.css` -> no standalone output
 
 Only `main.css` and `editor.css` should normally import Tailwind itself. Native
@@ -91,6 +99,11 @@ startup, so restart `npm run dev` after the one-time UI selection.
 `npm run dev` runs Vite in watch mode and writes development source maps.
 `npm run build` runs a clean production build, removes stale outputs, and must
 always be run before committing.
+
+Include development/build tools when checking dependency security. Run
+`npm audit` and `composer audit --locked`, update affected lockfile entries,
+and rerun the build and code checks. A passing build does not establish that
+the installed dependency versions are free of known advisories.
 
 Core-owned asset sources live under:
 
@@ -186,8 +199,13 @@ front end and in the editor, or for narrowly scoped conditional block assets.
 
 ## Installed Components
 
-Toolkit components place PHP integration below `/inc/components/`, Sass below
-`/assets/scss/components/`, and JavaScript below `/assets/scripts/components/`.
-The package-owned `/core/components.php` loader includes component PHP after
-the required core helpers have booted. Keep component-specific enqueue logic
-with the project-owned component PHP file.
+Toolkit component integrations live below `/inc/components/toolkit/`, with
+registered Sass sources below `/assets/scss/styles-register/toolkit/` and
+JavaScript below `/assets/scripts/scripts-register/toolkit/`. The package-owned
+`/core/components.php` loader discovers PHP recursively after the required core
+helpers have booted. Keep component-specific enqueue logic with its PHP file.
+
+The mega menu has profile-independent BEM markup, CSS custom properties, and
+JavaScript behavior. Its Sass compiles alongside Tailwind's native CSS, and
+the `toolkit.mega-menu` handle loads only when the configured menu location
+has an assigned menu. Installing it does not require changing `header.php`.

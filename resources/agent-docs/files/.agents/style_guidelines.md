@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.0 -->
 # Style Guidelines
 
 ## CSS Classes
@@ -77,12 +77,24 @@ Sass `@import` statements. Tailwind CSS v4 entry points are native CSS and are
 processed by the official Vite plugin rather than Sass.
 
 For Tailwind projects, prefer utility classes in project templates and keep
-shared design tokens in `/assets/styles/theme/_theme.css`. Put authored global
+shared design tokens and root custom properties in
+`/assets/styles/abstracts/_root.css`. Put authored global
 base rules in import-only files below `/assets/styles/base/`, named front-end
 component rules below `/assets/styles/components/`, and project utilities below
 `/assets/styles/utilities/`. Continue using BEM for authored component classes;
 Tailwind utilities themselves follow Tailwind's naming system.
 
+Use `@theme` in `_root.css` for variables that should create Tailwind utilities.
+Use `:root` there for runtime-only custom properties. Import-only partials stay
+separate in source control while Tailwind bundles them into `main.min.css` or
+`editor.min.css`. Create a non-underscored register/enqueue entry only when the
+browser should load a genuinely separate stylesheet.
+
 Use `@layer` to place authored Tailwind-profile rules in the intended cascade
 layer. Use `@reference` from standalone native CSS entries that need the main
 theme context for `@apply`, rather than importing Tailwind into every entry.
+
+Native CSS nesting does not concatenate BEM names like Sass. Inside `.feature`,
+write `.feature__title` for a descendant or `&.feature--featured` for a modifier;
+keep Sass-only `&__title` concatenation in `.scss` files. A nested partial may
+use `@apply` when its importing entry supplies the Tailwind context.
