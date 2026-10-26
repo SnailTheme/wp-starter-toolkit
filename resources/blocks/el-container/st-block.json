@@ -1,0 +1,17 @@
+{
+    "schema": 1,
+    "source_slug": "el-container",
+    "default_title": "Elemental Container",
+    "source_namespace": "stwp",
+    "source_category": "st-wp-starter",
+    "bundle_only": true,
+    "required_core_version": ">=1.1.0",
+    "required_php_helpers": [
+        "st_wp_core_get_block_wrapper_attributes"
+    ],
+    "npm_dependencies": {},
+    "shared_assets": [],
+    "theme_files": [
+        "acf-json/group_stwp_el_container.json"
+    ]
+}

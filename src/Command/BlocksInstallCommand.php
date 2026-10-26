@@ -2,7 +2,7 @@
 /**
  * blocks:install command.
  *
- * Installs a packaged block into a destination slug chosen by the developer,
+ * Installs a standalone block into a chosen slug or a fixed-member bundle,
  * applying theme patterns and block-specific replacements.
  */
 
@@ -12,8 +12,12 @@ namespace SnailTheme\WPStarterToolkit\Command;
 
 use RuntimeException;
 use SnailTheme\WPStarterToolkit\Block\BlockInstaller;
+use SnailTheme\WPStarterToolkit\Block\BlockBundleInstaller;
+use SnailTheme\WPStarterToolkit\Block\BlockBundleManifest;
 use SnailTheme\WPStarterToolkit\Block\BlockManifest;
 use SnailTheme\WPStarterToolkit\Block\NpmRunner;
+use SnailTheme\WPStarterToolkit\Support\PackagePaths;
+use SnailTheme\WPStarterToolkit\Theme\ThemeContext;
 use Symfony\Component\Console\Input\InputArgument;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Input\InputOption;
@@ -29,19 +33,46 @@ final class BlocksInstallCommand extends ToolkitCommand {
 	protected function configure(): void {
 		$this
 			->setName( 'blocks:install' )
-			->setDescription( 'Install a packaged block into the target theme.' )
-			->addArgument( 'source-block', InputArgument::REQUIRED, 'Packaged block slug, for example slider.' )
-			->addArgument( 'destination-block', InputArgument::REQUIRED, 'Destination block slug, for example hero-slider.' )
+			->setDescription( 'Install a packaged block or bundle into the target theme.' )
+			->addArgument( 'source-block', InputArgument::REQUIRED, 'Packaged block or bundle slug, for example slider or elementals.' )
+			->addArgument( 'destination-block', InputArgument::OPTIONAL, 'Required for standalone blocks; forbidden for fixed-member bundles.' )
 			->addOption( 'replace-shared-assets', null, InputOption::VALUE_NONE, 'Replace declared shared assets when checksums differ.' );
 
 		$this->addSharedOptions( dryRun: true, yes: true );
 	}
 
 	protected function execute( InputInterface $input, OutputInterface $output ): int {
+		try {
+			return $this->executeInstall( $input, $output );
+		} catch ( \Throwable $exception ) {
+			if ( ! $this->wantsJson( $input ) ) {
+				throw $exception;
+			}
+			$this->writeJson( $output, array( 'status' => 'failed', 'message' => $exception->getMessage() ) );
+			return self::FAILURE;
+		}
+	}
+
+	private function executeInstall( InputInterface $input, OutputInterface $output ): int {
 		$theme       = $this->theme( $input );
 		$source      = (string) $input->getArgument( 'source-block' );
 		$destination = (string) $input->getArgument( 'destination-block' );
+		if ( 1 !== preg_match( '/^[a-z0-9]+(?:-[a-z0-9]+)*$/', $source ) ) {
+			throw new RuntimeException( 'Invalid source block slug.' );
+		}
+		if ( is_file( ( new PackagePaths() )->resources( 'blocks/' . $source . '/st-bundle.json' ) ) ) {
+			if ( null !== $input->getArgument( 'destination-block' ) || $input->getOption( 'replace-shared-assets' ) ) {
+				throw new RuntimeException( 'Fixed-member bundles accept no destination override or shared-asset replacement.' );
+			}
+			return $this->installBundle( $theme, BlockBundleManifest::load( $source ), $input, $output );
+		}
 		$manifest    = BlockManifest::load( $source );
+		if ( true === ( $manifest->data()['bundle_only'] ?? false ) ) {
+			throw new RuntimeException( 'This block is bundle-only. Install elementals instead.' );
+		}
+		if ( '' === $destination ) {
+			throw new RuntimeException( 'A destination-block argument is required for standalone blocks.' );
+		}
 		$installer   = new BlockInstaller();
 		$npm         = new NpmRunner();
 
@@ -176,6 +207,54 @@ final class BlocksInstallCommand extends ToolkitCommand {
 		$this->printPlan( $output, $result );
 
 		return self::SUCCESS;
+	}
+
+	/**
+	 * Bundle confirmation covers the complete staged plan, not individual members.
+	 */
+	private function installBundle( ThemeContext $theme, BlockBundleManifest $bundle, InputInterface $input, OutputInterface $output ): int {
+		$installer = new BlockBundleInstaller();
+		$prepared = $installer->plan( $theme, $bundle );
+		$plan = $prepared->toArray();
+		if ( (bool) $input->getOption( 'dry-run' ) ) {
+			$plan['dry_run'] = true;
+			if ( $this->wantsJson( $input ) ) {
+				return $this->writeJson( $output, $plan );
+			}
+			$output->writeln( '<info>Block bundle install dry run</info>' );
+			$this->printPlan( $output, $plan );
+			return self::SUCCESS;
+		}
+		if ( ! $this->wantsJson( $input ) ) {
+			$this->printPlan( $output, $plan );
+		}
+		// JSON automation must opt in with --yes and never start a prompt/npm run.
+		$confirmed = $this->wantsJson( $input )
+			? (bool) $input->getOption( 'yes' )
+			: $this->confirm( $input, $output, 'Install all bundle members and replace the listed conflicts?' );
+		if ( ! $confirmed ) {
+			$plan['status'] = 'cancelled';
+			$plan['message'] = 'Block bundle install cancelled. Re-run with --yes to confirm non-interactively.';
+			if ( $this->wantsJson( $input ) ) {
+				$this->writeJson( $output, $plan );
+			} else {
+				$output->writeln( '<comment>' . $plan['message'] . '</comment>' );
+			}
+			return $input->isInteractive() && ! $this->wantsJson( $input ) ? self::SUCCESS : self::FAILURE;
+		}
+		$result = $installer->install( $prepared );
+		$failed = 'failed' === $result['build']['status'];
+		if ( $this->wantsJson( $input ) ) {
+			$this->writeJson( $output, $result );
+		} else {
+			$output->writeln( $failed ? '<error>Block bundle installed, but the asset build failed.</error>' : '<info>Block bundle install complete</info>' );
+			$output->writeln( 'Backup: ' . $result['backup_path'] );
+			if ( $failed ) {
+				$output->writeln( $result['build']['message'] );
+				$output->writeln( $result['recovery'] );
+			}
+		}
+		return $failed ? self::FAILURE : self::SUCCESS;
 	}
 
 	/**

@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.0 -->
 # Blocks And ACF
 
 ## Namespace Map
@@ -38,7 +38,6 @@ New blocks should use WordPress Block API v3 and ACF Blocks v3:
   "apiVersion": 3,
   "acf": {
     "blockVersion": 3,
-    "mode": "preview",
     "renderTemplate": "block-render.php"
   }
 }
@@ -118,7 +117,8 @@ instead of duplicating PHP settings logic in the script.
 
 ## ACF Field Structure
 
-New ACF blocks should use two main groups:
+Native-only elements need no dummy ACF field groups. When a block has ACF
+data, use the Fields/Settings tabs and two main groups:
 
 - `<namespace>-<block-name>-fields`
 - `<namespace>-<block-name>-settings`
@@ -148,6 +148,45 @@ When blocks are installed through the toolkit, package source ACF JSON can use
 readable symbolic keys. The toolkit rewrites those keys to deterministic
 ACF-style keys for the installed destination block and names the local JSON
 file after the generated group key.
+
+## Elemental Compositions
+
+Install the foundation with `composer st-toolkit blocks:install elementals`.
+Its `el-*` slugs are fixed; only the configured namespace changes. A Section
+is rooted in `<namespace>/el-wrapper` and contains a meaningful elemental
+child, optionally inside `<namespace>/el-container`.
+
+- Wrapper is a full-width section with native background-colour, margin, and
+  padding controls only. Do not add background effects, borders, visibility,
+  or project header behaviour to it.
+- Container owns width/position, not background or automatic gutters.
+- Heading/Text own native content; Content With Image adds an ACF image, not
+  duplicate ACF heading/body/button fields.
+- Columns accepts Column children; Grid accepts Grid Cell children. Use these
+  elements instead of core Group/Row/Stack/Columns/Grid in our compositions.
+  Do not globally disable WordPress layout blocks.
+- Keep one named `InnerBlocks` slot per element, including its `className`
+  wrapper in front-end/editor styles. Keep templates editable and heading
+  levels under the native Heading block's control.
+- Keep ACF field definitions self-contained. No cross-block Clone groups or
+  dependencies on Cynomi branding, source helpers, or legacy tabs code.
+
+Spacing defaults come from WordPress tokens with sensible fallbacks. Layouts
+stack below 48rem by default, with selectable 40rem/48rem/64rem tiers. Tabs are
+not part of the first foundation pack.
+
+Native spacing controls also need a theme opt-in. Bundle installation merges
+only `settings.blocks.<namespace>/el-wrapper.spacing.margin/padding` into
+`theme.json` and backs up that file with the block installation. Do not enable
+spacing globally just to expose the Wrapper's controls. In the editor,
+WordPress applies native supports to the outer block wrapper; do not duplicate
+those native styles on the preview's inner section.
+
+Treat ACF settings as input, not validation guarantees: allowlist layout choices
+and clamp numeric ranges in render files. Custom CSS lengths must be finite and
+positive. Keep layout children shrinkable and allow long unbroken content to
+wrap inside the owned content root instead of hiding overflow or widening the
+page. Check the same cases in the iframe and frontend.
 
 ## Block Styles
 

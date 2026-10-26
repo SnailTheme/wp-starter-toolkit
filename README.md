@@ -148,6 +148,31 @@ updater can verify what it owns.
 
 Blocks are installed from `resources/blocks/<block>/st-block.json`.
 
+The elemental foundation is a fixed-member bundle:
+
+```bash
+composer st-toolkit -- blocks:install elementals --dry-run
+composer st-toolkit -- blocks:install elementals --yes
+```
+
+It installs Wrapper, Container, Heading, Text, Columns/Column, Grid/Grid Cell,
+and Content With Image together. Names follow the theme's namespace, such as
+`acme/el-wrapper` in `blocks/acme-el-wrapper/`. Bundle members cannot be
+renamed independently or installed with a destination argument.
+
+The complete bundle is staged and validated before target writes. The plan
+lists every overwrite, and confirmed installs create one file-scoped backup
+and run one build. Unrelated project files are preserved. The native Wrapper
+spacing opt-in is merged into its namespaced `theme.json` block settings,
+without replacing the project's palette, layout, or other block settings.
+
+Compose Sections from Wrapper plus meaningful elemental children, optionally
+through Container. Native content stays in InnerBlocks; ACF holds additional
+content such as images and element-specific settings. Native-only elements
+have no dummy ACF groups. Tabs are not included in this first foundation pack.
+
+Standalone blocks retain their existing source/destination syntax.
+
 Example:
 
 ```bash
@@ -241,6 +266,46 @@ production build. Component manifests state their required core version, and
 installation stops with a `core:update` instruction when the loader/API is too
 old.
 
+## Agent Workflows
+
+`composer st-toolkit init` installs local guides and six task skills for
+elemental compositions, block development, assets, core overrides, toolkit
+operations and validation. The conventions have one maintained source:
+
+```text
+AGENTS.md
+CLAUDE.md                         # imports AGENTS.md
+.agents/*.md                      # focused guides
+.agents/skills/wp-starter-*/SKILL.md
+.claude/skills/wp-starter-*/SKILL.md  # thin links to canonical skills
+```
+
+Codex discovers the canonical project skills; Claude Code uses its native
+entrypoints, whose bodies load those same workflows. Start the coding agent
+from the theme root or below it. If skills are not listed after initialization,
+start a new session. This does not configure global agents, change permissions,
+or install cloud/account-level skills.
+
+Refresh with `composer toolkit:docs-update`. Existing customized instructions
+without a version comment are preserved, including `CLAUDE.md`. New skills keep
+YAML frontmatter first, with the managed version comment immediately below it;
+remove that comment to opt out of updates for one file. Use
+`composer toolkit:docs-update -- --force --yes` only for an intentional refresh
+of equal-version prerelease files. Normal updates upgrade only guides whose
+individual content versions have increased; unchanged guides keep their versions.
+
+If you already maintain your own `CLAUDE.md`, add `@AGENTS.md` there when you
+want the shared theme instructions loaded too; the installer will not merge
+instructions into a developer-owned file.
+
+The installer ignores its local guides and Claude skill paths in Git without
+ignoring other Claude settings or custom skills. Normal Git deployments omit
+these files; manual upload/deployment tools must exclude them separately.
+
+Discovery contracts: [Codex skills](https://learn.chatgpt.com/docs/build-skills),
+[Claude Code skills](https://code.claude.com/docs/en/skills), and
+[shared project instructions](https://code.claude.com/docs/en/memory#share-one-file-with-other-coding-tools).
+
 ## Maintainer Validation
 
 Run the package checks before publishing:
@@ -249,6 +314,21 @@ Run the package checks before publishing:
 composer validate --strict
 composer test:acceptance
 ```
+
+The offline suite covers core/UI/component checks, bundle installation and
+recovery, and the Elemental test harness itself. Run the latter separately with
+`composer test:elementals-harness`. It uses a deliberately minimal generator
+stub only for failure/reporting checks; actual generation is tested separately:
+
+```bash
+php tests/elementals-generated.php /absolute/clean-theme /absolute/generator/includes/functions.php /new/disposable-theme
+php tests/elementals-profiles.php /absolute/clean-theme /new/profile-fixtures
+```
+
+These opt-in integration checks run Composer/npm and require a clean unlocked
+Bare source. They never modify the source. Reports distinguish running, failed,
+and passed checks; local path repositories test unreleased toolkit code, not a
+published GitHub tag.
 
 For Tailwind profile or compiler changes, use an installed Tailwind theme with
 its npm dependencies available:

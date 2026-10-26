@@ -43,6 +43,9 @@ final class ReplacementEngine {
 	 * @param array<string,string> $targetPatterns Values from ST_WP_CORE_THEME_PATTERNS.
 	 */
 	public function applyThemePatterns( string $contents, array $targetPatterns ): string {
+		// Keep inserted namespaces out of later theme replacements as well.
+		$namespaceToken = '__ST_TOOLKIT_BLOCK_NAMESPACE__';
+		$contents = $this->replaceNamespacePatterns( $contents, self::SOURCE_THEME_PATTERNS['block_namespace'], $namespaceToken );
 		$map = array();
 
 		foreach ( self::SOURCE_THEME_PATTERNS as $key => $source ) {
@@ -70,22 +73,22 @@ final class ReplacementEngine {
 		$targetRepository = $targetPatterns['git_repo']
 			?? $targetPatterns['github_theme_uri']
 			?? self::SOURCE_THEME_PATTERNS['git_repo'];
-		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?=\.git(?![A-Za-z0-9_.-]))#'] = 'https://github.com/' . $targetRepository;
-		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?![A-Za-z0-9_.-])#'] = 'https://github.com/' . $targetRepository;
-		$map['{regex}#https://github\.com/snailtheme/wp-starter(?=\.git(?![A-Za-z0-9_.-]))#'] = 'https://github.com/' . $targetRepository;
-		$map['{regex}#https://github\.com/snailtheme/wp-starter(?=/[A-Za-z0-9._~%?\#-])#'] = 'https://github.com/' . $targetRepository;
-		$map['{regex}#https://github\.com/snailtheme/wp-starter(?![A-Za-z0-9_./-])#'] = 'https://github.com/' . $targetRepository;
-		$map['{regex}#(?<![A-Za-z0-9_./-])snailtheme/wp-starter(?![A-Za-z0-9_.-])#'] = $targetRepository;
+		$repositoryToken = '__ST_TOOLKIT_REPOSITORY__';
+		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?=\.git(?![A-Za-z0-9_.-]))#'] = 'https://github.com/' . $repositoryToken;
+		$map['{regex}#https://github\.com/SnailTheme/wp-starter(?![A-Za-z0-9_.-])#'] = 'https://github.com/' . $repositoryToken;
+		$map['{regex}#https://github\.com/snailtheme/wp-starter(?=\.git(?![A-Za-z0-9_.-]))#'] = 'https://github.com/' . $repositoryToken;
+		$map['{regex}#https://github\.com/snailtheme/wp-starter(?=/[A-Za-z0-9._~%?\#-])#'] = 'https://github.com/' . $repositoryToken;
+		$map['{regex}#https://github\.com/snailtheme/wp-starter(?![A-Za-z0-9_./-])#'] = 'https://github.com/' . $repositoryToken;
+		$map['{regex}#(?<![A-Za-z0-9_./-])snailtheme/wp-starter(?![A-Za-z0-9_.-])#'] = $repositoryToken;
 
-		$map = array_merge(
-			$map,
-			$this->namespaceReplacementMap(
-				self::SOURCE_THEME_PATTERNS['block_namespace'],
-				$targetPatterns['block_namespace'] ?? self::SOURCE_THEME_PATTERNS['block_namespace']
+		// Expand protected targets together so neither can be rescanned.
+		return strtr(
+			$this->replaceLongestFirst( $contents, $map ),
+			array(
+				$namespaceToken => $targetPatterns['block_namespace'] ?? self::SOURCE_THEME_PATTERNS['block_namespace'],
+				$repositoryToken => $targetRepository,
 			)
 		);
-
-		return $this->replaceLongestFirst( $contents, $map );
 	}
 
 	/**
@@ -182,27 +185,27 @@ final class ReplacementEngine {
 	}
 
 	/**
-	 * Build explicit namespace replacements.
+	 * Replace explicit namespace forms in a single pass over the source.
 	 *
 	 * The block namespace is intentionally not replaced as a raw word. Source
 	 * strings such as `distwp` can contain the namespace letters by accident, so
 	 * only explicit block namespace forms are transformed.
 	 *
-	 * @return array<string,string>
+	 * Callback output is never scanned again, even if it contains source tokens.
 	 */
-	private function namespaceReplacementMap( string $sourceNamespace, string $targetNamespace ): array {
+	private function replaceNamespacePatterns( string $contents, string $sourceNamespace, string $targetNamespace ): string {
 		if ( $sourceNamespace === $targetNamespace ) {
-			return array();
+			return $contents;
 		}
 
 		$sourceNamespace = preg_quote( $sourceNamespace, '#' );
 
-		return array(
-			'{regex}#([\'"]block_namespace[\'"]\s*(?:=>|:)\s*[\'"])' . $sourceNamespace . '([\'"])#' => '$1' . $targetNamespace . '$2',
-			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '\\\\/#' => $targetNamespace . '\\/',
-			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '/#' => $targetNamespace . '/',
-			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '-#' => $targetNamespace . '-',
-			'{regex}#(?<![A-Za-z0-9])' . $sourceNamespace . '_#' => $targetNamespace . '_',
+		return (string) preg_replace_callback(
+			'#([\'"]block_namespace[\'"]\s*(?:=>|:)\s*[\'"])' . $sourceNamespace . '([\'"])|(?<![A-Za-z0-9])' . $sourceNamespace . '(\\\\/|/|-|_)#',
+			static fn ( array $match ): string => isset( $match[3] )
+				? $targetNamespace . $match[3]
+				: $match[1] . $targetNamespace . $match[2],
+			$contents
 		);
 	}
 }

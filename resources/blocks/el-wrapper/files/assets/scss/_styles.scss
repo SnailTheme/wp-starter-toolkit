@@ -1,0 +1,13 @@
+@mixin render {
+  .stwp-el-wrapper {
+    box-sizing: border-box;
+    // Let native horizontal margins share the available width with the section.
+    width: auto;
+    max-width: none;
+
+    &__inner {
+      min-width: 0;
+      width: 100%;
+    }
+  }
+}

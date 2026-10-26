@@ -78,6 +78,20 @@ final class NpmRunner {
 	}
 
 	/**
+	 * Check dependency-free installs before their first target-theme write.
+	 * This probes availability only; it must not execute npm before confirmation.
+	 */
+	public function assertBuildAvailable( ThemeContext $theme ): void {
+		if ( null === $this->executables->find( 'npm' ) ) {
+			throw new RuntimeException( 'Required executable "npm" was not found in PATH. Install Node.js/npm and try again.' );
+		}
+		$package = ( new \SnailTheme\WPStarterToolkit\Support\JsonFile() )->read( $theme->resolve( 'package.json' ) );
+		if ( ! is_string( $package['scripts']['build'] ?? null ) || '' === trim( $package['scripts']['build'] ) ) {
+			throw new RuntimeException( 'The target theme must define an npm run build script before bundle installation.' );
+		}
+	}
+
+	/**
 	 * Return the command users should run for missing dependencies.
 	 *
 	 * @param array<string,string> $dependencies Package names to version constraints.

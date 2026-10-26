@@ -66,6 +66,9 @@ final class BlockInstaller {
 	 * @return array<string,mixed>
 	 */
 	public function plan( ThemeContext $theme, BlockManifest $manifest, string $destinationSlug ): array {
+		if ( true === ( $manifest->data()['bundle_only'] ?? false ) ) {
+			throw new RuntimeException( 'Bundle-only members cannot be installed as standalone blocks. Install their bundle instead.' );
+		}
 		$this->assertDestinationSlug( $destinationSlug );
 
 		$destination = $this->targetBlockDirectory( $theme, $destinationSlug );
@@ -188,7 +191,7 @@ final class BlockInstaller {
 	/**
 	 * Prepare transformed theme-root files in temporary storage.
 	 */
-	private function prepareThemeFiles( ThemeContext $theme, BlockManifest $manifest, string $destinationSlug ): string {
+	private function prepareThemeFiles( ThemeContext $theme, BlockManifest $manifest, string $destinationSlug, bool $fixedMember = false ): string {
 		$temp = rtrim( sys_get_temp_dir(), DIRECTORY_SEPARATOR )
 			. DIRECTORY_SEPARATOR
 			. 'st-toolkit-theme-files-' . $destinationSlug . '-' . bin2hex( random_bytes( 6 ) );
@@ -196,7 +199,7 @@ final class BlockInstaller {
 		$this->filesystem->mkdir( $temp );
 		$this->temporaryDirectories[] = $temp;
 
-		foreach ( $this->themeFiles( $manifest ) as $relativePath ) {
+		foreach ( $this->themeFiles( $manifest, $fixedMember ) as $relativePath ) {
 			$source = $manifest->themeFilesRoot() . DIRECTORY_SEPARATOR . $relativePath;
 			$target = $temp . DIRECTORY_SEPARATOR . $this->targetThemeFilePath( $theme, $manifest, $relativePath, $destinationSlug );
 
@@ -204,7 +207,9 @@ final class BlockInstaller {
 
 			if ( $this->textFiles->isTextFile( $source ) ) {
 				$contents = (string) file_get_contents( $source );
-				$contents = $this->replacements->applyBlockPatterns( $contents, $manifest->data(), $destinationSlug, $theme->patterns );
+				$contents = $fixedMember
+					? $this->applyBundlePatterns( $contents, $theme )
+					: $this->replacements->applyBlockPatterns( $contents, $manifest->data(), $destinationSlug, $theme->patterns );
 				if ( $this->isAcfJsonPath( $relativePath ) ) {
 					$contents = $this->generateAcfJsonKeys( $contents, $theme, $destinationSlug );
 				}
@@ -371,7 +376,7 @@ final class BlockInstaller {
 	/**
 	 * Prepare transformed block files in temporary storage.
 	 */
-	private function prepareBlockFiles( ThemeContext $theme, BlockManifest $manifest, string $destinationSlug ): string {
+	private function prepareBlockFiles( ThemeContext $theme, BlockManifest $manifest, string $destinationSlug, bool $fixedMember = false ): string {
 		$temp = rtrim( sys_get_temp_dir(), DIRECTORY_SEPARATOR )
 			. DIRECTORY_SEPARATOR
 			. 'st-toolkit-block-' . $destinationSlug . '-' . bin2hex( random_bytes( 6 ) );
@@ -379,7 +384,7 @@ final class BlockInstaller {
 		$this->filesystem->mkdir( $temp );
 		$this->temporaryDirectories[] = $temp;
 
-		foreach ( $this->blockFiles( $manifest ) as $relativePath ) {
+		foreach ( $this->blockFiles( $manifest, $fixedMember ) as $relativePath ) {
 			$source = $manifest->filesRoot() . DIRECTORY_SEPARATOR . $relativePath;
 			$target = $temp . DIRECTORY_SEPARATOR . $relativePath;
 
@@ -387,7 +392,9 @@ final class BlockInstaller {
 
 			if ( $this->textFiles->isTextFile( $source ) ) {
 				$contents = (string) file_get_contents( $source );
-				$contents = $this->replacements->applyBlockPatterns( $contents, $manifest->data(), $destinationSlug, $theme->patterns );
+				$contents = $fixedMember
+					? $this->applyBundlePatterns( $contents, $theme )
+					: $this->replacements->applyBlockPatterns( $contents, $manifest->data(), $destinationSlug, $theme->patterns );
 				file_put_contents( $target, $contents );
 				continue;
 			}
@@ -414,13 +421,55 @@ final class BlockInstaller {
 	}
 
 	/**
+	 * Stage a fixed bundle member without renaming its slug or title.
+	 *
+	 * The caller validates package paths before staging and retains this service
+	 * until the staged files have been consumed. ACF keys use the standalone
+	 * algorithm unchanged, so saved field references remain deterministic.
+	 *
+	 * @return array<string,string> Theme-relative targets to temporary source files.
+	 */
+	public function stageBundleMember( ThemeContext $theme, BlockManifest $manifest ): array {
+		$slug       = $manifest->sourceSlug();
+		$this->assertDestinationSlug( $slug );
+		$blockRoot  = $this->prepareBlockFiles( $theme, $manifest, $slug, true );
+		$themeRoot  = $this->prepareThemeFiles( $theme, $manifest, $slug, true );
+		$files      = array();
+		$metadata   = $this->json->read( $blockRoot . '/block.json' );
+		$metadata['category'] = $theme->pattern( 'block_category', $theme->pattern( 'text_domain', 'st-wp-starter' ) );
+		$this->json->write( $blockRoot . '/block.json', $metadata );
+
+		foreach ( $this->blockFiles( $manifest, true ) as $relative ) {
+			$files[ $this->targetBlockDirectory( $theme, $slug ) . '/' . $relative ] = $blockRoot . '/' . $relative;
+		}
+
+		foreach ( $this->themeFiles( $manifest, true ) as $relative ) {
+			$target = $this->targetThemeFilePath( $theme, $manifest, $relative, $slug );
+			$files[ $target ] = $themeRoot . '/' . $target;
+		}
+
+		return $files;
+	}
+
+	/**
+	 * Bundle titles/slugs are fixed. The starter category and text domain share
+	 * a source token, so metadata sets the category structurally after replacing
+	 * theme identifiers; otherwise a custom category could overwrite textdomain.
+	 */
+	private function applyBundlePatterns( string $contents, ThemeContext $theme ): string {
+		$patterns = $theme->patterns;
+		$patterns['block_category'] = $theme->pattern( 'text_domain', 'st-wp-starter' );
+		return $this->replacements->applyThemePatterns( $contents, $patterns );
+	}
+
+	/**
 	 * Return block package files relative to the block files root.
 	 *
 	 * @return string[]
 	 */
-	private function blockFiles( BlockManifest $manifest ): array {
+	private function blockFiles( BlockManifest $manifest, bool $includeHidden = false ): array {
 		$files  = array();
-		$finder = Finder::create()->files()->in( $manifest->filesRoot() );
+		$finder = Finder::create()->files()->ignoreDotFiles( ! $includeHidden )->ignoreVCS( ! $includeHidden )->in( $manifest->filesRoot() );
 
 		foreach ( $finder as $file ) {
 			$files[] = str_replace( '\\', '/', $file->getRelativePathname() );
@@ -436,13 +485,13 @@ final class BlockInstaller {
 	 *
 	 * @return string[]
 	 */
-	private function themeFiles( BlockManifest $manifest ): array {
+	private function themeFiles( BlockManifest $manifest, bool $includeHidden = false ): array {
 		if ( ! is_dir( $manifest->themeFilesRoot() ) ) {
 			return array();
 		}
 
 		$files  = array();
-		$finder = Finder::create()->files()->in( $manifest->themeFilesRoot() );
+		$finder = Finder::create()->files()->ignoreDotFiles( ! $includeHidden )->ignoreVCS( ! $includeHidden )->in( $manifest->themeFilesRoot() );
 
 		foreach ( $finder as $file ) {
 			$files[] = str_replace( '\\', '/', $file->getRelativePathname() );
