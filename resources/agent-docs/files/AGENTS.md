@@ -34,6 +34,23 @@ The current namespace line is refreshed by `composer st-toolkit init` or
 - [Blocks and ACF](.agents/blocks_and_acf.md)
 - [CLI and toolkit](.agents/cli_and_toolkit.md)
 
+## Task Skills
+
+Load the workflow matching the task, then only its relevant guides:
+
+- [Compose elemental sections](.agents/skills/wp-starter-elemental-sections/SKILL.md)
+- [Develop reusable blocks](.agents/skills/wp-starter-block-development/SKILL.md)
+- [Work with assets](.agents/skills/wp-starter-assets/SKILL.md)
+- [Customize core behavior safely](.agents/skills/wp-starter-core-overrides/SKILL.md)
+- [Operate the toolkit](.agents/skills/wp-starter-toolkit/SKILL.md)
+- [Validate a change](.agents/skills/wp-starter-validation/SKILL.md)
+
+Canonical skills live in `.agents/skills/`. Claude's `.claude/skills/`
+entrypoints delegate to those same files; `CLAUDE.md` imports this guide.
+Start the coding agent from this theme root (or a subdirectory). After initial
+setup, start a fresh session if skills are not listed. Provider-specific
+permissions and workspace trust still apply; this setup changes neither.
+
 ## Before Editing
 
 - Read the focused guide for the area you are changing.
@@ -45,9 +62,16 @@ The current namespace line is refreshed by `composer st-toolkit init` or
 - Treat the locked UI profile as the project's permanent styling foundation;
   replacement is an exceptional destructive migration.
 - Keep reusable blocks independent from the active UI profile.
+- Compose Sections from the `el-*` foundation, rooted in `el-wrapper`, with an
+  optional `el-container`; native-only elements need no dummy ACF fields. Read
+  the Blocks and ACF guide before adding elemental or section compositions.
 
 ## Local-Only Notes
 
 These files are installed by `composer st-toolkit init` and are ignored by Git
-by default. If you want to customize one and prevent toolkit updates for that
-file, remove the version marker from its first line.
+by default. To customize a file and opt out of updates, remove its
+`st-toolkit-agent-doc-version` comment. In SKILL.md that comment follows the
+YAML header; keep the header first so skill discovery still works.
+
+Git ignore rules do not protect manual FTP uploads or a server that serves
+local files directly. Exclude local agent files from non-Git deployments too.

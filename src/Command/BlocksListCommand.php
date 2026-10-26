@@ -10,6 +10,7 @@ declare(strict_types=1);
 namespace SnailTheme\WPStarterToolkit\Command;
 
 use SnailTheme\WPStarterToolkit\Block\BlockRepository;
+use SnailTheme\WPStarterToolkit\Block\BlockBundleManifest;
 use Symfony\Component\Console\Input\InputInterface;
 use Symfony\Component\Console\Output\OutputInterface;
 
@@ -28,13 +29,17 @@ final class BlocksListCommand extends ToolkitCommand {
 	}
 
 	protected function execute( InputInterface $input, OutputInterface $output ): int {
+		$repository = new BlockRepository();
+		$manifests = array_merge( $repository->all(), $repository->bundles() );
+		usort( $manifests, static fn ( $left, $right ): int => $left->sourceSlug() <=> $right->sourceSlug() );
 		$blocks = array_map(
 			static fn ( $manifest ): array => array(
 				'slug'                  => $manifest->sourceSlug(),
 				'title'                 => $manifest->defaultTitle(),
 				'required_core_version' => $manifest->requiredCoreVersion(),
+				'type'                  => $manifest instanceof BlockBundleManifest ? 'bundle' : 'block',
 			),
-			( new BlockRepository() )->all()
+			$manifests
 		);
 
 		if ( $this->wantsJson( $input ) ) {

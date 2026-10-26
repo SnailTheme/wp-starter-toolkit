@@ -21,7 +21,15 @@
     "bin/st-toolkit"
   ],
   "scripts": {
-    "test:acceptance": "@php tests/acceptance.php"
+    "test:acceptance": [
+      "@php tests/acceptance.php",
+      "@php tests/bundles.php",
+      "@php tests/elementals-harness-safety.php",
+      "@php tests/agent-docs.php"
+    ],
+    "test:bundles": "@php tests/bundles.php",
+    "test:elementals-harness": "@php tests/elementals-harness-safety.php",
+    "test:agent-docs": "@php tests/agent-docs.php"
   },
   "minimum-stability": "stable",
   "prefer-stable": true

@@ -1,0 +1,28 @@
+{
+  "schema": 1,
+  "type": "bundle",
+  "source_slug": "elementals",
+  "default_title": "Elemental Foundation",
+  "members": [
+    "el-wrapper",
+    "el-container",
+    "el-heading",
+    "el-text",
+    "el-columns",
+    "el-column",
+    "el-grid",
+    "el-grid-cell",
+    "el-content-with-image"
+  ],
+  "required_core_version": ">=1.1.0",
+  "theme_settings": {
+    "blocks": {
+      "stwp/el-wrapper": {
+        "spacing": {
+          "margin": true,
+          "padding": true
+        }
+      }
+    }
+  }
+}

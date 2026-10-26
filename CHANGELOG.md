@@ -1,5 +1,18 @@
 # Changelog
 
+## Unreleased
+
+- Add the nine-block Elemental Foundation bundle with namespace-aware ACF keys,
+  staged conflict checks, scoped native spacing opt-in, one backup/build, and
+  file-scoped failure recovery.
+- Add shared project guidance and six workflow skills for Codex and Claude Code.
+  `init`/`docs:update` install canonical skills, Claude entrypoints and local
+  ignore rules without overwriting markerless custom instructions.
+- Keep skill YAML headers first while versioning their body markers. Reject
+  unsafe docs paths before writes and preserve unrelated Claude configuration.
+- Extend offline regression suites and real generated/profile fixtures. No new
+  package/core release or existing guide-version bump is part of this branch.
+
 ## 1.2.0
 
 ### Tailwind Sources

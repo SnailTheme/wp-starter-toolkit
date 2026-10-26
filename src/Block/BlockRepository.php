@@ -37,7 +37,10 @@ final class BlockRepository {
 
 		foreach ( $finder as $file ) {
 			$slug     = basename( dirname( $file->getPathname() ) );
-			$blocks[] = BlockManifest::load( $slug, $this->paths );
+			$manifest = BlockManifest::load( $slug, $this->paths );
+			if ( true !== ( $manifest->data()['bundle_only'] ?? false ) ) {
+				$blocks[] = $manifest;
+			}
 		}
 
 		usort(
@@ -46,5 +49,24 @@ final class BlockRepository {
 		);
 
 		return $blocks;
+	}
+
+	/**
+	 * Discover bundles separately so existing standalone consumers (doctor) retain
+	 * their BlockManifest contract and do not have to traverse bundle members.
+	 *
+	 * @return BlockBundleManifest[]
+	 */
+	public function bundles(): array {
+		$root = $this->paths->resources( 'blocks' );
+		if ( ! is_dir( $root ) ) {
+			return array();
+		}
+		$bundles = array();
+		foreach ( Finder::create()->files()->name( 'st-bundle.json' )->depth( 1 )->in( $root ) as $file ) {
+			$bundles[] = new BlockBundleManifest( $file->getPathname() );
+		}
+		usort( $bundles, static fn ( BlockBundleManifest $left, BlockBundleManifest $right ): int => $left->sourceSlug() <=> $right->sourceSlug() );
+		return $bundles;
 	}
 }

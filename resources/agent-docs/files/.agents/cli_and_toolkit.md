@@ -61,6 +61,8 @@ composer toolkit:core-update:dry-run
 composer toolkit:core-update -- --yes
 composer toolkit:core-rollback -- --yes
 composer toolkit:blocks-list
+composer toolkit:blocks-install:dry-run elementals
+composer toolkit:blocks-install elementals
 composer toolkit:blocks-install:dry-run slider hero-slider
 composer toolkit:blocks-install slider hero-slider -- --yes
 composer toolkit:ui-list
@@ -100,13 +102,44 @@ Do not use toolkit core updates as a way to change project-specific code in
 `/inc/`, templates, generic assets, or local blocks.
 
 Toolkit docs updates are separate from core updates. Use `docs:update` when
-you only want the local `AGENTS.md` and `.agents/` guidance refreshed.
+you only want local instructions and skills refreshed. Initialization installs
+`AGENTS.md`, focused guides and canonical `.agents/skills/` workflows, a
+`CLAUDE.md` import, and thin `.claude/skills/wp-starter-*/` entrypoints pointing
+to the shared workflows. No global agent configuration is changed.
+
+Start Codex or Claude Code from the theme root or a subdirectory, and start a
+fresh session after initial installation if new skills are not listed. Select
+the matching skill by name in Codex, or use `/wp-starter-elemental-sections`
+in Claude Code when composing a Section. See AGENTS.md for the full skill map.
+Other application/cloud modes may not use local project skill directories.
+
+These files are ignored by Git for normal Git deployments. Exclude them from
+manual uploads too: `.gitignore` is not web-server access control. Updates skip
+markerless customized files, including skills and existing Claude instructions,
+even with `--force`. In SKILL.md, remove only the version comment after the YAML
+header to opt out; keep the YAML header first. During equal-version prerelease
+development use the explicit forced docs update shown above.
+If a custom `CLAUDE.md` is preserved, add `@AGENTS.md` to it manually when you
+want shared theme instructions imported; the toolkit does not merge custom text.
 
 Toolkit block installs are separate from core updates and docs updates. Use
 `blocks:install` when you want to copy a curated packaged block into the local
 theme. Block installs can also install missing npm dependencies, copy required
 shared source assets, and run `npm run build` when the packaged block declares
 those requirements.
+
+The `elementals` bundle installs its fixed `el-*` family in one operation:
+
+```bash
+composer st-toolkit -- blocks:install elementals --dry-run
+composer st-toolkit -- blocks:install elementals --yes
+```
+
+Do not pass a destination slug for a bundle. All member paths and internal
+references use the theme's configured block namespace. The toolkit validates
+the complete pack and confirms overwrites before target writes, then creates
+one backup and runs one build. A build failure leaves the installed files and
+reports the backup; fix the issue and rerun `npm run build`.
 
 UI profile installs scaffold project-owned style sources and update the
 committed `st-toolkit.json` profile receipt. Choose the profile once, before

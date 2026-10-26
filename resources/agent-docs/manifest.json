@@ -9,7 +9,20 @@
     ".agents/style_guidelines.md",
     ".agents/template_tags_and_helpers.md",
     ".agents/blocks_and_acf.md",
-    ".agents/cli_and_toolkit.md"
+    ".agents/cli_and_toolkit.md",
+    "CLAUDE.md",
+    ".agents/skills/wp-starter-elemental-sections/SKILL.md",
+    ".agents/skills/wp-starter-block-development/SKILL.md",
+    ".agents/skills/wp-starter-assets/SKILL.md",
+    ".agents/skills/wp-starter-core-overrides/SKILL.md",
+    ".agents/skills/wp-starter-toolkit/SKILL.md",
+    ".agents/skills/wp-starter-validation/SKILL.md",
+    ".claude/skills/wp-starter-elemental-sections/SKILL.md",
+    ".claude/skills/wp-starter-block-development/SKILL.md",
+    ".claude/skills/wp-starter-assets/SKILL.md",
+    ".claude/skills/wp-starter-core-overrides/SKILL.md",
+    ".claude/skills/wp-starter-toolkit/SKILL.md",
+    ".claude/skills/wp-starter-validation/SKILL.md"
   ],
   "file_versions": {
     "AGENTS.md": "1.1.0",
@@ -18,6 +31,19 @@
     ".agents/style_guidelines.md": "1.2.0",
     ".agents/template_tags_and_helpers.md": "1.0.0",
     ".agents/blocks_and_acf.md": "1.1.0",
-    ".agents/cli_and_toolkit.md": "1.1.0"
+    ".agents/cli_and_toolkit.md": "1.1.0",
+    "CLAUDE.md": "1.0.0",
+    ".agents/skills/wp-starter-elemental-sections/SKILL.md": "1.0.0",
+    ".agents/skills/wp-starter-block-development/SKILL.md": "1.0.0",
+    ".agents/skills/wp-starter-assets/SKILL.md": "1.0.0",
+    ".agents/skills/wp-starter-core-overrides/SKILL.md": "1.0.0",
+    ".agents/skills/wp-starter-toolkit/SKILL.md": "1.0.0",
+    ".agents/skills/wp-starter-validation/SKILL.md": "1.0.0",
+    ".claude/skills/wp-starter-elemental-sections/SKILL.md": "1.0.0",
+    ".claude/skills/wp-starter-block-development/SKILL.md": "1.0.0",
+    ".claude/skills/wp-starter-assets/SKILL.md": "1.0.0",
+    ".claude/skills/wp-starter-core-overrides/SKILL.md": "1.0.0",
+    ".claude/skills/wp-starter-toolkit/SKILL.md": "1.0.0",
+    ".claude/skills/wp-starter-validation/SKILL.md": "1.0.0"
   }
 }
