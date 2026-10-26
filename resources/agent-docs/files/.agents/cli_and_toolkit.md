@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.0 -->
 # CLI And Toolkit
 
 ## Composer Commands

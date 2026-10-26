@@ -13,9 +13,11 @@ use SnailTheme\WPStarterToolkit\Block\BlockInstaller;
 use SnailTheme\WPStarterToolkit\Block\BlockManifest;
 use SnailTheme\WPStarterToolkit\Support\JsonFile;
 use SnailTheme\WPStarterToolkit\Support\BackupManager;
+use SnailTheme\WPStarterToolkit\Support\ReplacementEngine;
 use SnailTheme\WPStarterToolkit\Theme\ThemeContext;
 use SnailTheme\WPStarterToolkit\Theme\ThemeDetector;
 use Symfony\Component\Filesystem\Filesystem;
+use Symfony\Component\Process\ExecutableFinder;
 use Symfony\Component\Process\Process;
 
 require dirname( __DIR__ ) . '/vendor/autoload.php';
@@ -30,6 +32,7 @@ $originalLog = getenv( 'ST_BUNDLE_NPM_LOG' );
 $originalFail = getenv( 'ST_BUNDLE_NPM_FAIL' );
 $originalEnv = $_ENV;
 $originalServer = $_SERVER;
+$git = ( new ExecutableFinder() )->find( 'git' );
 
 /** Keep Symfony Process's inherited environment consistent with getenv(). */
 function bundle_env( string $name, string|false $value ): void {
@@ -137,6 +140,10 @@ final class BundleRecoveryRaceFilesystem extends Filesystem {
 	private bool $failed = false;
 
 	public function rename( string $originFile, string $targetFile, bool $overwrite = false ): void {
+		if ( ! str_starts_with( basename( $originFile ), '.st-toolkit-bundle-' ) ) {
+			parent::rename( $originFile, $targetFile, $overwrite );
+			return;
+		}
 		if ( ! $this->failed && 3 === count( $this->committed ) ) {
 			$this->failed = true;
 			( new Filesystem() )->dumpFile( $this->committed[2], 'concurrent edit after bundle write' );
@@ -208,6 +215,11 @@ try {
 	$bootstrap = $themePath . '/core/bootstrap.php';
 	$fs->dumpFile( $bootstrap, "<?php\ndeclare(strict_types=1);\ndefine( 'ST_WP_CORE_VERSION', '1.1.0' );\ndefine( 'ST_WP_CORE_THEME_PATTERNS', " . var_export( $patterns, true ) . " );\n" );
 	$fs->dumpFile( $themePath . '/package.json', '{"scripts":{"build":"fixture-build"}}' );
+	$projectIgnore = "/node_modules\n/vendor\n# Project-owned ignore rules\n/private-build/\n";
+	$fs->dumpFile( $themePath . '/.gitignore', $projectIgnore );
+	if ( null !== $git ) {
+		( new Process( array( $git, 'init', '--quiet', $themePath ) ) )->mustRun();
+	}
 	$theme = ( new ThemeDetector() )->detect( $themePath );
 	bundle_assert( 'acme' === $theme->pattern( 'block_namespace' ), 'Theme patterns did not resolve from bootstrap.' );
 	$bundle = new BlockBundleManifest( $manifestPath );
@@ -347,6 +359,12 @@ PHP;
 	bundle_assert( 'completed' === $result['build']['status'], 'Bundle build did not complete: ' . json_encode( $result['build'] ) );
 	bundle_assert( "run build\n" === file_get_contents( $log ), 'Bundle must execute one build and no npm install.' );
 	bundle_assert( 1 === count( glob( $themePath . '/.st-toolkit/backups/*block-bundle-elementals-*' ) ?: array() ), 'Bundle did not create exactly one named backup.' );
+	bundle_assert( $projectIgnore === file_get_contents( $themePath . '/.gitignore' ), 'Bundle installation changed project-owned ignore rules.' );
+	if ( null !== $git ) {
+		$runtimeStatus = new Process( array( $git, 'status', '--short', '--untracked-files=all', '--', '.st-toolkit' ), $themePath );
+		$runtimeStatus->mustRun();
+		bundle_assert( '' === trim( $runtimeStatus->getOutput() ), 'Bundle runtime files leaked into Git status: ' . $runtimeStatus->getOutput() );
+	}
 	foreach ( $plan->files as $relative => $source ) {
 		bundle_assert( hash_file( 'sha256', $source ) === hash_file( 'sha256', $theme->resolve( $relative ) ), 'Installed bytes differ from confirmed stage.' );
 	}
@@ -567,6 +585,27 @@ PHP
 	$fs->copy( $themePath . '/style.css', $freshPath . '/style.css' );
 	$fs->copy( $themePath . '/package.json', $freshPath . '/package.json' );
 	$freshTheme = ( new ThemeDetector() )->detect( $freshPath );
+	$firstLockPath = $freshPath . '/.st-toolkit/backups/block-bundle.lock';
+	$fs->mkdir( dirname( $firstLockPath ) );
+	$firstLock = fopen( $firstLockPath, 'c+' );
+	bundle_assert( false !== $firstLock && flock( $firstLock, LOCK_EX | LOCK_NB ), 'Could not acquire the fresh-theme fixture lock.' );
+	try {
+		if ( null !== $git ) {
+			( new Process( array( $git, 'init', '--quiet', $freshPath ) ) )->mustRun();
+		}
+		$firstLockPlan = $installer->plan( $freshTheme, $bundle );
+		bundle_throws( static fn () => $installer->install( $firstLockPlan ), 'Another bundle installation is running' );
+		bundle_assert( 0 === count( glob( $freshPath . '/.st-toolkit/backups/*block-bundle-elementals-*' ) ?: array() ), 'Failed first lock acquisition created a backup.' );
+		bundle_assert( '*' . PHP_EOL === file_get_contents( $freshPath . '/.st-toolkit/backups/.gitignore' ), 'Failed first lock acquisition left runtime state unignored.' );
+		if ( null !== $git ) {
+			$runtimeStatus = new Process( array( $git, 'status', '--short', '--untracked-files=all', '--', '.st-toolkit' ), $freshPath );
+			$runtimeStatus->mustRun();
+			bundle_assert( '' === trim( $runtimeStatus->getOutput() ), 'Failed first lock acquisition leaked runtime files into Git status: ' . $runtimeStatus->getOutput() );
+		}
+	} finally {
+		flock( $firstLock, LOCK_UN );
+		fclose( $firstLock );
+	}
 	$freshInstaller = new BlockBundleInstaller( filesystem: new BundleFailingFilesystem() );
 	$freshPlan = $freshInstaller->plan( $freshTheme, $bundle );
 	bundle_throws( static fn () => $freshInstaller->install( $freshPlan ), 'owned files restored' );
@@ -608,7 +647,7 @@ PHP
 		bundle_assert( '{"version":3,"custom":"external"}' === file_get_contents( $externalFile ), 'Bundle writes followed a hard link and modified a file outside the theme.' );
 	}
 	$lockPlan = $baselineInstaller->plan( $raceTheme, $bundle );
-	$lock = fopen( $racePath . '/.st-toolkit/block-bundle.lock', 'c+' );
+	$lock = fopen( $racePath . '/.st-toolkit/backups/block-bundle.lock', 'c+' );
 	bundle_assert( false !== $lock && flock( $lock, LOCK_EX | LOCK_NB ), 'Could not acquire fixture bundle lock.' );
 	try {
 		$lockBefore = bundle_snapshot( $racePath );
@@ -688,13 +727,45 @@ PHP
 		$realReady = $realReady && is_file( $root . '/resources/blocks/' . $slug . '/st-block.json' );
 	}
 	if ( $realReady ) {
-		$realInstaller = new BlockBundleInstaller();
-		$realPlan = $realInstaller->plan( $theme, $realBundle );
-		bundle_assert( 9 === count( $realPlan->toArray()['members'] ), 'Actual bundle did not stage every member.' );
-		$realResult = $realInstaller->install( $realPlan );
-		bundle_assert( 'completed' === $realResult['build']['status'], 'Actual bundle did not install/build.' );
-		$realRepeat = $realInstaller->plan( $theme, $realBundle );
-		bundle_assert( array( 'unchanged' ) === array_values( array_unique( array_column( $realRepeat->toArray()['changes'], 'action' ) ) ), 'Actual pack reinstall is not deterministic.' );
+		foreach ( array( 'acme', 'stwp-studio', 'stwp-core', 'stwp-starter' ) as $namespace ) {
+			$namespacePath = $temp . '/bundle-' . $namespace;
+			$namespacePatterns = $patterns;
+			$namespacePatterns['block_namespace'] = $namespace;
+			$fs->mirror( $root . '/resources/core/files', $namespacePath );
+			$fs->copy( $themePath . '/style.css', $namespacePath . '/style.css' );
+			$fs->copy( $themePath . '/package.json', $namespacePath . '/package.json' );
+			$fs->dumpFile(
+				$namespacePath . '/core/bootstrap.php',
+				( new ReplacementEngine() )->applyThemePatterns( (string) file_get_contents( $root . '/resources/core/files/core/bootstrap.php' ), $namespacePatterns )
+			);
+			$namespaceTheme = ( new ThemeDetector() )->detect( $namespacePath );
+			bundle_assert( $namespace === $namespaceTheme->pattern( 'block_namespace' ), 'Bundle fixture bootstrap has the wrong namespace: ' . $namespace );
+			$realInstaller = new BlockBundleInstaller();
+			$realPlan = $realInstaller->plan( $namespaceTheme, $realBundle );
+			bundle_assert( 9 === count( $realPlan->toArray()['members'] ), 'Actual bundle did not stage every member.' );
+			$realResult = $realInstaller->install( $realPlan );
+			bundle_assert( 'completed' === $realResult['build']['status'], 'Actual bundle did not install/build.' );
+			foreach ( $realBundle->memberSlugs() as $slug ) {
+				$metadata = $json->read( $namespacePath . '/blocks/' . $namespace . '-' . $slug . '/block.json' );
+				bundle_assert( $namespace . '/' . $slug === $metadata['name'], 'Bundle member namespace was transformed more than once: ' . $namespace . '/' . $slug );
+				$style = (string) file_get_contents( $namespacePath . '/blocks/' . $namespace . '-' . $slug . '/assets/css/view-style.min.css' );
+				bundle_assert( str_contains( $style, '.' . $namespace . '-' . $slug ), 'Bundle styles have the wrong namespace: ' . $namespace . '/' . $slug );
+			}
+			foreach ( glob( $namespacePath . '/acf-json/*.json' ) ?: array() as $acfPath ) {
+				$acf = $json->read( $acfPath );
+				$slug = substr( $acf['location'][0][0]['value'], strlen( $namespace ) + 1 );
+				bundle_assert( in_array( $slug, $realBundle->memberSlugs(), true ), 'Bundle ACF location has the wrong namespace: ' . $namespace );
+				foreach ( $acf['fields'] as $field ) {
+					if ( 'group' === $field['type'] ) {
+						bundle_assert( in_array( $field['name'], array( $namespace . '-' . $slug . '-fields', $namespace . '-' . $slug . '-settings' ), true ), 'Bundle ACF field root has the wrong namespace: ' . $namespace );
+					}
+				}
+			}
+			$settings = $json->read( $namespacePath . '/theme.json' );
+			bundle_assert( true === $settings['settings']['blocks'][ $namespace . '/el-wrapper' ]['spacing']['padding'], 'Bundle theme settings have the wrong namespace: ' . $namespace );
+			$realRepeat = $realInstaller->plan( $namespaceTheme, $realBundle );
+			bundle_assert( array( 'unchanged' ) === array_values( array_unique( array_column( $realRepeat->toArray()['changes'], 'action' ) ) ), 'Actual pack reinstall is not deterministic.' );
+		}
 	} else {
 		fwrite( STDOUT, "Real pack resources pending; synthetic transaction fixtures passed.\n" );
 	}

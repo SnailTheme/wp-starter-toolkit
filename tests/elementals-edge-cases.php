@@ -2,6 +2,7 @@
 /**
  * Seed owned browser edge cases and check hostile layout settings in WordPress.
  * Run through wp eval with require after elementals-wordpress.php.
+ * Define ST_TOOLKIT_ELEMENTAL_EDGE_CHECKS_ONLY as true to skip fixture writes.
  */
 
 declare(strict_types=1);
@@ -70,6 +71,33 @@ foreach ( array( '320px', '.5rem', '12em', '72ch', '80%', '90vw', ' 40rem ' ) as
 	}
 	++$checks;
 }
+// Preserve native horizontal margins without making the section wider than its parent.
+$wrapper = $blocks[0] ?? array();
+if ( $namespace . '/el-wrapper' !== ( $wrapper['blockName'] ?? '' ) ) {
+	throw new RuntimeException( 'The Kitchen Sink lacks a root Wrapper fixture.' );
+}
+$wrapper['attrs']['style']['spacing']['margin']['left']  = '32px';
+$wrapper['attrs']['style']['spacing']['margin']['right'] = '32px';
+$wrapper_html = render_block( $wrapper );
+foreach ( array( 'margin-left:32px', 'margin-right:32px' ) as $margin ) {
+	if ( ! str_contains( $wrapper_html, $margin ) ) {
+		throw new RuntimeException( 'Wrapper lost native horizontal spacing: ' . $margin );
+	}
+	++$checks;
+}
+foreach ( array( 'view-style', 'editor-style' ) as $style ) {
+	$css = file_get_contents( get_stylesheet_directory() . '/blocks/' . $namespace . '-el-wrapper/assets/css/' . $style . '.min.css' );
+	$selector = preg_quote( '.' . $namespace . '-el-wrapper', '/' );
+	if ( false === $css || ! preg_match( '/' . $selector . '\\{[^}]*\\bwidth:auto(?:;|\\})/', $css ) ) {
+		throw new RuntimeException( 'Wrapper must size around native horizontal margins in ' . $style . '.' );
+	}
+	++$checks;
+}
+$blocks[0] = $wrapper;
+if ( defined( 'ST_TOOLKIT_ELEMENTAL_EDGE_CHECKS_ONLY' ) && true === ST_TOOLKIT_ELEMENTAL_EDGE_CHECKS_ONLY ) {
+	WP_CLI::log( wp_json_encode( array( 'assertions' => $checks, 'checks_only' => true ) ) );
+	return;
+}
 $existing = get_page_by_path( 'elemental-edge-cases' );
 if ( $existing && ! get_post_meta( $existing->ID, '_st_toolkit_elemental_edge_fixture', true ) ) {
 	throw new RuntimeException( 'Refusing to overwrite an unrelated edge-case page.' );
@@ -77,7 +105,7 @@ if ( $existing && ! get_post_meta( $existing->ID, '_st_toolkit_elemental_edge_fi
 $post_id = wp_insert_post( array(
 	'ID'           => $existing ? $existing->ID : 0,
 	'post_type'    => 'page',
-	'post_status'  => 'publish',
+	'post_status'  => 'draft',
 	'post_author'  => get_current_user_id(),
 	'post_title'   => 'Elemental Edge Cases',
 	'post_name'    => 'elemental-edge-cases',
@@ -87,4 +115,4 @@ if ( is_wp_error( $post_id ) ) {
 	throw new RuntimeException( $post_id->get_error_message() );
 }
 update_post_meta( $post_id, '_st_toolkit_elemental_edge_fixture', 1 );
-WP_CLI::log( wp_json_encode( array( 'assertions' => $checks, 'page_id' => $post_id, 'url' => get_permalink( $post_id ) ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );
+WP_CLI::log( wp_json_encode( array( 'assertions' => $checks, 'page_id' => $post_id, 'url' => get_preview_post_link( $post_id ) ), JSON_PRETTY_PRINT | JSON_UNESCAPED_SLASHES ) );

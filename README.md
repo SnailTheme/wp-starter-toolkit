@@ -291,8 +291,8 @@ without a version comment are preserved, including `CLAUDE.md`. New skills keep
 YAML frontmatter first, with the managed version comment immediately below it;
 remove that comment to opt out of updates for one file. Use
 `composer toolkit:docs-update -- --force --yes` only for an intentional refresh
-of equal-version prerelease files. Existing guide versions are not bumped by
-this development pass.
+of equal-version prerelease files. Normal updates upgrade only guides whose
+individual content versions have increased; unchanged guides keep their versions.
 
 If you already maintain your own `CLAUDE.md`, add `@AGENTS.md` there when you
 want the shared theme instructions loaded too; the installer will not merge

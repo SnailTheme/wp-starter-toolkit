@@ -18,7 +18,10 @@ use Symfony\Component\Filesystem\Filesystem;
  * Plans and writes toolkit-managed agent documentation files.
  */
 final class AgentDocsInstaller {
-	private const VERSION_MARKER_PATTERN = '/^<!--\s*st-toolkit-agent-doc-version:\s*([^>\s]+)\s*-->/';
+	private const VERSION_MARKER_PATTERN = '/\A<!--[ \t]*st-toolkit-agent-doc-version:[ \t]*([^>\s]+)[ \t]*-->\z/';
+	private const SEMANTIC_VERSION_PATTERN = '/\A(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)\.(?:0|[1-9][0-9]*)'
+		. '(?:-(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*)(?:\.(?:0|[1-9][0-9]*|[0-9]*[A-Za-z-][0-9A-Za-z-]*))*)?'
+		. '(?:\+[0-9A-Za-z-]+(?:\.[0-9A-Za-z-]+)*)?\z/';
 	private const HEADER_SCAN_BYTES = 32768;
 	private const HEADER_SCAN_LINES = 128;
 
@@ -26,8 +29,14 @@ final class AgentDocsInstaller {
 		'/AGENTS.md',
 		'/.agents/',
 		'/CLAUDE.md',
-		'/.claude/skills/wp-starter-*/',
+		'/.claude/skills/wp-starter-elemental-sections/',
+		'/.claude/skills/wp-starter-block-development/',
+		'/.claude/skills/wp-starter-assets/',
+		'/.claude/skills/wp-starter-core-overrides/',
+		'/.claude/skills/wp-starter-toolkit/',
+		'/.claude/skills/wp-starter-validation/',
 	);
+	private const OBSOLETE_GITIGNORE_LINES = array( '/.claude/skills/wp-starter-*/' );
 
 	public function __construct(
 		?AgentDocsManifest $manifest = null,
@@ -134,11 +143,11 @@ final class AgentDocsInstaller {
 		$ignoreContents = is_file( $ignorePath ) ? $this->readFile( $ignorePath ) : null;
 		$previous['.gitignore'] = null === $ignoreContents ? null : hash( 'sha256', $ignoreContents );
 		$gitignore = $this->gitignorePlan( $ignoreContents );
-		if ( array() !== $gitignore['missing_lines'] ) {
+		if ( array() !== $gitignore['missing_lines'] || array() !== $gitignore['obsolete_lines'] ) {
 			$this->assertPath( $theme->path, '.gitignore', true );
 			// Once every path passes preflight, ignore local docs before creating
 			// any of them, including when a subsequent documentation write fails.
-			$rendered = array( '.gitignore' => $this->renderGitignore( $ignoreContents ?? '', $gitignore['missing_lines'] ) ) + $rendered;
+			$rendered = array( '.gitignore' => $this->renderGitignore( $ignoreContents ?? '', $gitignore['missing_lines'], $gitignore['obsolete_lines'] ) ) + $rendered;
 		}
 		$plan = array(
 			'theme_path' => $theme->path,
@@ -203,7 +212,13 @@ final class AgentDocsInstaller {
 	 * leading YAML frontmatter. Never search Markdown prose or fenced examples.
 	 */
 	private function installedVersion( string $contents ): ?string {
-		$lines = array_slice( preg_split( '/\r\n|\n|\r/', substr( $contents, 0, self::HEADER_SCAN_BYTES ), self::HEADER_SCAN_LINES + 1 ) ?: array(), 0, self::HEADER_SCAN_LINES );
+		$header = substr( $contents, 0, self::HEADER_SCAN_BYTES );
+		$lines = preg_split( '/\r\n|\n|\r/', $header, self::HEADER_SCAN_LINES + 1 ) ?: array();
+		if ( strlen( $contents ) > self::HEADER_SCAN_BYTES ) {
+			// A truncated line can hide trailing prose after an apparent marker.
+			array_pop( $lines );
+		}
+		$lines = array_slice( $lines, 0, self::HEADER_SCAN_LINES );
 		$line = $lines[0] ?? '';
 		if ( '---' === rtrim( $line, " \t" ) ) {
 			$line = '';
@@ -214,38 +229,63 @@ final class AgentDocsInstaller {
 				}
 			}
 		}
-		return 1 === preg_match( self::VERSION_MARKER_PATTERN, trim( $line ), $matches ) ? $matches[1] : null;
+		if ( 1 !== preg_match( self::VERSION_MARKER_PATTERN, trim( $line ), $matches ) ) {
+			return null;
+		}
+		// version_compare() accepts arbitrary words; they must not grant ownership.
+		return 1 === preg_match( self::SEMANTIC_VERSION_PATTERN, $matches[1] ) ? $matches[1] : null;
 	}
 
 	/**
-	 * Plan required .gitignore additions.
+	 * Plan required .gitignore additions and exact legacy-rule removals.
 	 *
 	 * @return array<string,mixed>
 	 */
 	private function gitignorePlan( ?string $contents ): array {
-		$lines    = preg_split( '/\R/', $contents ?? '' ) ?: array();
+		$lines    = preg_split( '/\r\n|\n|\r/', $contents ?? '' ) ?: array();
 		$missing  = array();
+		$obsolete = array();
 
 		foreach ( self::GITIGNORE_LINES as $line ) {
 			if ( ! in_array( $line, $lines, true ) ) {
 				$missing[] = $line;
 			}
 		}
+		foreach ( self::OBSOLETE_GITIGNORE_LINES as $line ) {
+			if ( in_array( $line, $lines, true ) ) {
+				$obsolete[] = $line;
+			}
+		}
 
 		return array(
 			'path'          => '.gitignore',
-			'action'        => array() === $missing ? 'unchanged' : ( null !== $contents ? 'update' : 'add' ),
+			'action'        => array() === $missing && array() === $obsolete ? 'unchanged' : ( null !== $contents ? 'update' : 'add' ),
 			'missing_lines' => $missing,
+			'obsolete_lines' => $obsolete,
 		);
 	}
 
 	/**
-	 * Append only the toolkit-owned ignore rules, leaving user Claude files alone.
+	 * Migrate only exact toolkit-owned rules, leaving unrelated bytes alone.
 	 *
 	 * @param string[] $missingLines Lines to append.
+	 * @param string[] $obsoleteLines Exact legacy lines to remove.
 	 */
-	private function renderGitignore( string $contents, array $missingLines ): string {
-		if ( '' !== $contents && ! str_ends_with( $contents, PHP_EOL ) ) {
+	private function renderGitignore( string $contents, array $missingLines, array $obsoleteLines ): string {
+		if ( array() !== $obsoleteLines ) {
+			$lines = preg_split( '/(\r\n|\n|\r)/', $contents, -1, PREG_SPLIT_DELIM_CAPTURE ) ?: array();
+			$contents = '';
+			// Retain original line endings, comments, and user-owned ignore rules.
+			for ( $index = 0, $count = count( $lines ); $index < $count; $index += 2 ) {
+				if ( ! in_array( $lines[ $index ], $obsoleteLines, true ) ) {
+					$contents .= $lines[ $index ] . ( $lines[ $index + 1 ] ?? '' );
+				}
+			}
+		}
+		if ( array() === $missingLines ) {
+			return $contents;
+		}
+		if ( '' !== $contents && ! str_ends_with( $contents, "\n" ) && ! str_ends_with( $contents, "\r" ) ) {
 			$contents .= PHP_EOL;
 		}
 

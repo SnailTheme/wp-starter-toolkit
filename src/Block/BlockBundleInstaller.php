@@ -18,6 +18,8 @@ use SnailTheme\WPStarterToolkit\Theme\ThemeContext;
 use Symfony\Component\Filesystem\Filesystem;
 
 final class BlockBundleInstaller {
+	private const LOCK_PATH = '.st-toolkit/backups/block-bundle.lock';
+
 	public function __construct(
 		private readonly BlockInstaller $blocks = new BlockInstaller(),
 		private readonly Filesystem $filesystem = new Filesystem(),
@@ -325,9 +327,16 @@ final class BlockBundleInstaller {
 	/** @return resource Held through the build; the lock file is never unlinked. */
 	private function acquireLock( BlockBundlePlan $plan ) {
 		$theme = $plan->theme;
-		$relative = '.st-toolkit/block-bundle.lock';
-		$this->filesystem->mkdir( $theme->resolve( '.st-toolkit' ) );
+		$relative = self::LOCK_PATH;
+		$this->filesystem->mkdir( dirname( $theme->resolve( $relative ) ) );
 		$this->assertInputs( $plan );
+		$this->assertBackupTarget( $theme );
+		// Ignore runtime state before opening the persistent lock, even if lock
+		// acquisition fails before BackupManager creates the first backup.
+		$ignore = $theme->resolve( '.st-toolkit/backups/.gitignore' );
+		if ( ! file_exists( $ignore ) ) {
+			$this->filesystem->dumpFile( $ignore, '*' . PHP_EOL );
+		}
 		BlockBundlePaths::assertTarget( $theme, $relative );
 		$lock = @fopen( $theme->resolve( $relative ), 'c+' );
 		if ( false === $lock ) {
@@ -358,7 +367,7 @@ final class BlockBundleInstaller {
 
 	private function assertBackupTarget( ThemeContext $theme ): void {
 		BlockBundlePaths::assertTarget( $theme, '.st-toolkit/backups/.gitignore' );
-		BlockBundlePaths::assertTarget( $theme, '.st-toolkit/block-bundle.lock' );
+		BlockBundlePaths::assertTarget( $theme, self::LOCK_PATH );
 	}
 
 	/**

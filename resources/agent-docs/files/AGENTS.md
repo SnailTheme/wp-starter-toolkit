@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.0 -->
 # Theme Agent Guide
 
 This file is the entrypoint for maintainers and coding agents working inside

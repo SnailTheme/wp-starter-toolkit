@@ -1,6 +1,6 @@
 # Changelog
 
-## Unreleased
+## 1.3.0
 
 - Add the nine-block Elemental Foundation bundle with namespace-aware ACF keys,
   staged conflict checks, scoped native spacing opt-in, one backup/build, and
@@ -10,8 +10,26 @@
   ignore rules without overwriting markerless custom instructions.
 - Keep skill YAML headers first while versioning their body markers. Reject
   unsafe docs paths before writes and preserve unrelated Claude configuration.
-- Extend offline regression suites and real generated/profile fixtures. No new
-  package/core release or existing guide-version bump is part of this branch.
+- Preserve customized instructions with malformed version markers rather than
+  treating arbitrary version text as permission to overwrite them.
+- Keep bundle installation locks in ignored runtime storage without editing
+  project ignore rules.
+- Ignore only the six installed Claude skill directories; migrate the old
+  wildcard rule without hiding custom project skills that use the same prefix.
+- Size Wrapper sections around their native horizontal margins without overflow.
+- Transform namespace forms without rewriting already-inserted namespace values.
+- Preserve generated GitHub repository identities when their owner matches a
+  source author token but the project author has a different name.
+- Agent docs package: `1.3.0`; edited AGENTS, block and CLI guides advance to
+  `1.2.0`. New skills start at `1.0.0`; unchanged guides retain their versions.
+  Shared core remains `1.1.0`.
+- Extend offline regression suites and real generated/profile fixtures. Runtime
+  checks used WordPress 6.9.4, ACF PRO 6.8.5, PHP 8.2.29 and Node 24.14.1 on
+  Linux/Brave. Latest-WordPress and non-Linux runtime checks remain outstanding.
+
+Merge the reviewed `next` branch into `main`, then tag that final commit
+`v1.3.0`. Do not move existing tags. Theme dependency publication follows the
+stable toolkit tag; installed block fixtures never merge into clean themes.
 
 ## 1.2.0
 

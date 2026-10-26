@@ -134,6 +134,27 @@ try {
 	acceptance_assert( ! str_contains( $replaced, 'github.com/Acme Inc' ), 'Author replacement corrupted a GitHub organization path.' );
 	acceptance_assert( str_contains( $replaced, 'st_wp_core_generate_img' ), 'Stable core helper was unexpectedly whitelabeled.' );
 
+	$namespaceSource = <<<'TEXT'
+'block_namespace' => 'stwp'
+"block_namespace": "stwp"
+stwp/el-wrapper stwp\/el-wrapper stwp-el-wrapper field_stwp_el_wrapper
+distwp/example distwp-example distwp_example stwp st_wp_core_generate_img
+TEXT;
+	$namespaceExpected = <<<'TEXT'
+'block_namespace' => '__NAMESPACE__'
+"block_namespace": "__NAMESPACE__"
+__NAMESPACE__/el-wrapper __NAMESPACE__\/el-wrapper __NAMESPACE__-el-wrapper field___NAMESPACE___el_wrapper
+distwp/example distwp-example distwp_example stwp st_wp_core_generate_img
+TEXT;
+	foreach ( array( 'acme', 'stwp-studio', 'stwp-core', 'stwp-starter' ) as $namespace ) {
+		$namespacePatterns = $patterns;
+		$namespacePatterns['block_namespace'] = $namespace;
+		acceptance_assert(
+			str_replace( '__NAMESPACE__', $namespace, $namespaceExpected ) === $replacementEngine->applyThemePatterns( $namespaceSource, $namespacePatterns ),
+			'Namespace replacements cascaded or changed unrelated identifiers: ' . $namespace
+		);
+	}
+
 	$legacyPatterns = $patterns;
 	unset( $legacyPatterns['git_repo'] );
 	$legacyPatterns['github_theme_uri'] = 'legacy-org/legacy-theme';
@@ -144,6 +165,39 @@ try {
 
 	acceptance_assert( str_contains( $legacyReplaced, 'https://github.com/legacy-org/legacy-theme' ), 'Repository URL did not fall back to github_theme_uri.' );
 	acceptance_assert( str_contains( $legacyReplaced, "'github_theme_uri' => 'legacy-org/legacy-theme'" ), 'Legacy github_theme_uri was reset to the starter repository.' );
+
+	$repositorySource = <<<'TEXT'
+https://github.com/SnailTheme/wp-starter/issues
+https://github.com/SnailTheme/wp-starter.git
+https://github.com/snailtheme/wp-starter.git
+https://github.com/snailtheme/wp-starter/#readme
+'git_repo' => 'snailtheme/wp-starter'
+'github_theme_uri' => 'snailtheme/wp-starter'
+https://github.com/snailtheme/wp-starter-toolkit.git
+Author: SnailTheme
+TEXT;
+	$repositoryExpected = <<<'TEXT'
+https://github.com/__REPOSITORY__/issues
+https://github.com/__REPOSITORY__.git
+https://github.com/__REPOSITORY__.git
+https://github.com/__REPOSITORY__/#readme
+'git_repo' => '__REPOSITORY__'
+'github_theme_uri' => '__REPOSITORY__'
+https://github.com/snailtheme/wp-starter-toolkit.git
+Author: Acme Inc
+TEXT;
+	foreach ( array( 'git_repo', 'github_theme_uri', 'default' ) as $repositoryKey ) {
+		$repositoryPatterns = array( 'author_name' => 'Acme Inc' );
+		$repositoryTarget = 'snailtheme/wp-starter';
+		if ( 'default' !== $repositoryKey ) {
+			$repositoryTarget = 'SnailTheme/client-theme';
+			$repositoryPatterns[ $repositoryKey ] = $repositoryTarget;
+		}
+		acceptance_assert(
+			str_replace( '__REPOSITORY__', $repositoryTarget, $repositoryExpected ) === $replacementEngine->applyThemePatterns( $repositorySource, $repositoryPatterns ),
+			'Inserted repository was rescanned or its fallback changed: ' . $repositoryKey
+		);
+	}
 
 	$themePath = $temp . DIRECTORY_SEPARATOR . 'theme';
 	$filesystem->mirror( $root . '/resources/core/files', $themePath );
@@ -175,7 +229,7 @@ try {
 	$theme        = ( new ThemeDetector() )->detect( $themePath );
 	$docsManifest = AgentDocsManifest::load();
 
-	acceptance_assert( '1.1.0' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own 1.1.0 content version.' );
+	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/scripts_and_styles.md' ), 'Changed asset guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.2.0' === $docsManifest->fileVersion( '.agents/style_guidelines.md' ), 'Changed style guide did not receive its own 1.2.0 content version.' );
 	acceptance_assert( '1.0.0' === $docsManifest->fileVersion( '.agents/template_tags_and_helpers.md' ), 'Unchanged helper guide was unnecessarily versioned as changed.' );
@@ -191,12 +245,12 @@ try {
 	$docsChanges   = array_column( $docsPlan['changes'], null, 'path' );
 
 	acceptance_assert( 'update' === $docsChanges['AGENTS.md']['action'], 'Changed agent guide was not planned for update.' );
-	acceptance_assert( '1.1.0' === $docsChanges['AGENTS.md']['target_version'], 'Agent guide plan did not expose its file-specific target version.' );
+	acceptance_assert( '1.2.0' === $docsChanges['AGENTS.md']['target_version'], 'Agent guide plan did not expose its file-specific target version.' );
 	acceptance_assert( 'skip' === $docsChanges['.agents/template_tags_and_helpers.md']['action'], 'Unchanged current-version helper guide was planned for update.' );
 	acceptance_assert( '1.0.0' === $docsChanges['.agents/template_tags_and_helpers.md']['target_version'], 'Helper guide plan used the package-wide version instead of its content version.' );
 
 	$docsInstaller->install( $theme );
-	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/AGENTS.md' ), '1.1.0' ), 'Changed agent guide did not update.' );
+	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/AGENTS.md' ), '1.2.0' ), 'Changed agent guide did not update.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/.agents/template_tags_and_helpers.md' ), 'Current Helper Guide Sentinel' ), 'Unchanged helper guide was rewritten.' );
 
 	$updated = ( new CoreUpdater() )->update( $theme );
@@ -299,6 +353,26 @@ try {
 	acceptance_assert( is_file( $themePath . '/assets/scripts/scripts-register/plugins/splidejs/splide.min.js' ), 'Block install did not add the shared Splide JavaScript source.' );
 	acceptance_assert( 0 === preg_match( '#(?<![A-Za-z0-9])stwp(?:/|\\\\/|-|_)#', $blockJson . $renderPhp . $acfJson ), 'Installed block retained an explicit source namespace token.' );
 	acceptance_assert( is_file( $themePath . '/inc/acceptance-sentinel.php' ), 'Block install touched /inc/.' );
+
+	foreach ( array( 'acme', 'stwp-studio', 'stwp-core', 'stwp-starter' ) as $namespace ) {
+		$namespacePath = $temp . '/standalone-' . $namespace;
+		$namespacePatterns = $patterns;
+		$namespacePatterns['block_namespace'] = $namespace;
+		$filesystem->mirror( $root . '/resources/core/files', $namespacePath );
+		$filesystem->copy( $themePath . '/style.css', $namespacePath . '/style.css' );
+		$filesystem->copy( $themePath . '/package.json', $namespacePath . '/package.json' );
+		$filesystem->dumpFile(
+			$namespacePath . '/core/bootstrap.php',
+			$replacementEngine->applyThemePatterns( (string) file_get_contents( $root . '/resources/core/files/core/bootstrap.php' ), $namespacePatterns )
+		);
+		$namespaceTheme = ( new ThemeDetector() )->detect( $namespacePath );
+		acceptance_assert( $namespace === $namespaceTheme->pattern( 'block_namespace' ), 'Core bootstrap namespace was transformed more than once: ' . $namespace );
+		( new BlockInstaller() )->install( $namespaceTheme, $manifest, 'hero-slider' );
+		$installedMetadata = json_decode( (string) file_get_contents( $namespacePath . '/blocks/' . $namespace . '-hero-slider/block.json' ), true, 512, JSON_THROW_ON_ERROR );
+		acceptance_assert( $namespace . '/hero-slider' === $installedMetadata['name'], 'Standalone block name was transformed more than once: ' . $namespace );
+		$installedAcf = json_decode( (string) file_get_contents( ( glob( $namespacePath . '/acf-json/*.json' ) ?: array() )[0] ), true, 512, JSON_THROW_ON_ERROR );
+		acceptance_assert( $namespace . '/hero-slider' === $installedAcf['location'][0][0]['value'] && $namespace . '-hero-slider-fields' === $installedAcf['fields'][1]['name'], 'Standalone ACF namespace or renamed slug is incorrect: ' . $namespace );
+	}
 
 	$uiInstaller = new UIProfileInstaller();
 	$bareProfile = UIProfileManifest::load( 'bare' );
