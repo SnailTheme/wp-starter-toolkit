@@ -398,7 +398,7 @@ PHP;
 	$runner = $package . '/runner.php';
 	$fs->dumpFile( $runner, "<?php\ndeclare(strict_types=1);\n" . $autoload . 'exit( ( new SnailTheme\WPStarterToolkit\Application() )->run() );' );
 	$list = bundle_cli( $runner, array( 'blocks:list', '--json' ) );
-	bundle_assert( 0 === $list['status'] && array( 'elementals', 'slider' ) === array_column( $list['json']['blocks'], 'slug' ), 'List must include bundles and hide their members.' );
+	bundle_assert( 0 === $list['status'] && array( 'elementals', 'slider' ) === array_column( $list['json']['blocks'], 'slug' ), 'Fixture list must include bundles and hide bundle-only members.' );
 	$doctor = bundle_cli( $runner, array( 'doctor', '--theme=' . $themePath, '--json' ) );
 	bundle_assert( 0 === $doctor['status'] && array( 'slider' ) === array_column( $doctor['json']['blocks'], 'slug' ), 'Doctor no longer receives standalone BlockManifest instances only.' );
 	$cliArgs = array( 'blocks:install', 'elementals', '--theme=' . $themePath, '--json', '--no-interaction' );
@@ -721,7 +721,7 @@ PHP
 
 	// When the main-owned resources exist, validate the actual complete pack too.
 	$realBundle = BlockBundleManifest::load( 'elementals' );
-	bundle_assert( 9 === count( $realBundle->memberSlugs() ), 'Elementals must declare all nine fixed members.' );
+	bundle_assert( 10 === count( $realBundle->memberSlugs() ), 'Elementals must declare all ten fixed members.' );
 	$realReady = true;
 	foreach ( $realBundle->memberSlugs() as $slug ) {
 		$realReady = $realReady && is_file( $root . '/resources/blocks/' . $slug . '/st-block.json' );
@@ -742,7 +742,7 @@ PHP
 			bundle_assert( $namespace === $namespaceTheme->pattern( 'block_namespace' ), 'Bundle fixture bootstrap has the wrong namespace: ' . $namespace );
 			$realInstaller = new BlockBundleInstaller();
 			$realPlan = $realInstaller->plan( $namespaceTheme, $realBundle );
-			bundle_assert( 9 === count( $realPlan->toArray()['members'] ), 'Actual bundle did not stage every member.' );
+			bundle_assert( 10 === count( $realPlan->toArray()['members'] ), 'Actual bundle did not stage every member.' );
 			$realResult = $realInstaller->install( $realPlan );
 			bundle_assert( 'completed' === $realResult['build']['status'], 'Actual bundle did not install/build.' );
 			foreach ( $realBundle->memberSlugs() as $slug ) {
@@ -765,6 +765,33 @@ PHP
 			bundle_assert( true === $settings['settings']['blocks'][ $namespace . '/el-wrapper' ]['spacing']['padding'], 'Bundle theme settings have the wrong namespace: ' . $namespace );
 			$realRepeat = $realInstaller->plan( $namespaceTheme, $realBundle );
 			bundle_assert( array( 'unchanged' ) === array_values( array_unique( array_column( $realRepeat->toArray()['changes'], 'action' ) ) ), 'Actual pack reinstall is not deterministic.' );
+			if ( 'acme' === $namespace ) {
+				$faqManifest = BlockManifest::load( 'el-faq' );
+				$standalone = new BlockInstaller();
+				$otherBefore = bundle_snapshot( $namespacePath . '/blocks/acme-el-heading' );
+				$faqArgs = array( 'blocks:install', 'el-faq', 'el-faq', '--theme=' . $namespacePath, '--json', '--no-interaction' );
+				$beforeFaq = bundle_snapshot( $namespacePath );
+				$faqDry = bundle_cli( $root . '/bin/st-toolkit', array_merge( $faqArgs, array( '--dry-run' ) ) );
+				bundle_assert( 0 === $faqDry['status'] && true === $faqDry['json']['core_version_satisfied'], 'Standalone FAQ dry run failed.' );
+				bundle_assert( $beforeFaq === bundle_snapshot( $namespacePath ), 'Standalone FAQ dry run wrote files.' );
+				$faqCancel = bundle_cli( $root . '/bin/st-toolkit', $faqArgs );
+				bundle_assert( str_contains( $faqCancel['output'], 'cancelled' ) && $beforeFaq === bundle_snapshot( $namespacePath ), 'Unconfirmed standalone FAQ wrote files.' );
+				$customFaq = $namespacePath . '/blocks/acme-el-faq/block-render.php';
+				$fs->dumpFile( $customFaq, "<?php // custom FAQ before replacement\n" );
+				$faqInstall = bundle_cli( $root . '/bin/st-toolkit', array_merge( $faqArgs, array( '--yes' ) ) );
+				bundle_assert( 0 === $faqInstall['status'] && 'completed' === $faqInstall['json']['build']['status'], 'Standalone FAQ install/build failed.' );
+				$backup = $faqInstall['json']['backup_path'];
+				bundle_assert( str_contains( (string) file_get_contents( $backup . '/blocks/acme-el-faq/block-render.php' ), 'custom FAQ' ), 'FAQ conflict was not backed up.' );
+				bundle_assert( $otherBefore === bundle_snapshot( $namespacePath . '/blocks/acme-el-heading' ), 'Standalone FAQ changed another Elemental.' );
+				bundle_assert( 'Elemental FAQ' === $json->read( $namespacePath . '/blocks/acme-el-faq/block.json' )['title'], 'Same-slug FAQ install renamed the canonical title.' );
+				$old = new ThemeContext( $namespaceTheme->path, $namespaceTheme->styleCssPath, $namespaceTheme->bootstrapPath, '1.1.0', $namespaceTheme->patterns );
+				bundle_assert( ! $standalone->plan( $old, $faqManifest, 'el-faq' )['core_version_satisfied'], 'FAQ accepted pre-schema core.' );
+				bundle_throws( static fn () => $standalone->install( $old, $faqManifest, 'el-faq' ), 'requires core >=1.2.0' );
+				bundle_env( 'ST_BUNDLE_NPM_FAIL', '1' );
+				$faqFailed = bundle_cli( $root . '/bin/st-toolkit', array_merge( $faqArgs, array( '--yes' ) ) );
+				bundle_assert( 0 !== $faqFailed['status'] && 'failed' === $faqFailed['json']['build']['status'] && is_dir( $faqFailed['json']['backup_path'] ), 'Standalone FAQ build failure omitted backup/reporting.' );
+				bundle_env( 'ST_BUNDLE_NPM_FAIL', false );
+			}
 		}
 	} else {
 		fwrite( STDOUT, "Real pack resources pending; synthetic transaction fixtures passed.\n" );

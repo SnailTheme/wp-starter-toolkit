@@ -18,7 +18,7 @@ use Symfony\Component\Process\Process;
 
 require_once dirname( __DIR__ ) . '/vendor/autoload.php';
 
-$members = array( 'el-wrapper', 'el-container', 'el-heading', 'el-text', 'el-columns', 'el-column', 'el-grid', 'el-grid-cell', 'el-content-with-image' );
+$members = array( 'el-wrapper', 'el-container', 'el-heading', 'el-text', 'el-columns', 'el-column', 'el-grid', 'el-grid-cell', 'el-content-with-image', 'el-faq' );
 $files = static function ( string $root, bool $source_only = true ): Finder {
 	$excluded = array_merge( array( 'vendor', 'node_modules', '.git' ), $source_only ? array( '.st-toolkit', '.agents', '.claude' ) : array() );
 	return Finder::create()->in( $root )->exclude( $excluded )
@@ -64,7 +64,7 @@ $validate = static function ( string $target, string $namespace ) use ( $members
 			|| 3 !== ( $block['apiVersion'] ?? null ) || 3 !== ( $block['acf']['blockVersion'] ?? null )
 			|| $theme->pattern( 'text_domain', 'st-wp-starter' ) !== ( $block['textdomain'] ?? null )
 			|| $theme->pattern( 'block_category', $theme->pattern( 'text_domain', 'st-wp-starter' ) ) !== ( $block['category'] ?? null )
-			|| true !== ( $block['supports']['jsx'] ?? null )
+			|| ( $namespace . '/el-faq' !== $name && true !== ( $block['supports']['jsx'] ?? null ) )
 			|| array_key_exists( 'mode', $block['acf'] ?? array() ) || array_key_exists( 'mode', $block['supports'] ?? array() )
 			|| ( $namespace . '/el-wrapper' !== $name && false !== ( $block['supports']['align'] ?? null ) ) ) {
 			throw new RuntimeException( 'Wrong installed namespace/API metadata: ' . $path );
@@ -101,7 +101,7 @@ $validate = static function ( string $target, string $namespace ) use ( $members
 	$sorted = $expected;
 	sort( $sorted );
 	if ( $actual !== $sorted ) {
-		throw new RuntimeException( 'Expected exactly the nine distinct Elemental members.' );
+		throw new RuntimeException( 'Expected exactly the ten distinct Elemental members.' );
 	}
 	$keys = $references = $locations = array();
 	$walk = static function ( array $node ) use ( &$walk, &$keys, &$references ): void {
@@ -150,7 +150,8 @@ $validate = static function ( string $target, string $namespace ) use ( $members
 				throw new RuntimeException( 'Incorrect ACF root namespace: ' . $path );
 			}
 			foreach ( $fields[ $index ]['sub_fields'] ?? array() as $field ) {
-				if ( ! str_starts_with( $field['name'] ?? '', $root . '__' ) ) {
+				$prefix = 'repeater' === ( $field['type'] ?? null ) ? $root . '-' : $root . '__';
+				if ( ! str_starts_with( $field['name'] ?? '', $prefix ) ) {
 					throw new RuntimeException( 'Incorrect ACF subfield namespace: ' . $path );
 				}
 			}
@@ -160,7 +161,7 @@ $validate = static function ( string $target, string $namespace ) use ( $members
 	sort( $locations );
 	sort( $expected_groups );
 	if ( $locations !== $expected_groups || array_diff( $references, array_keys( $keys ) ) ) {
-		throw new RuntimeException( 'Expected seven distinct ACF groups with resolvable field references.' );
+		throw new RuntimeException( 'Expected eight distinct ACF groups with resolvable field references.' );
 	}
 	$settings = $json->read( $target . '/theme.json' );
 	$spacing = $settings['settings']['blocks'][ $namespace . '/el-wrapper' ]['spacing'] ?? array();
@@ -247,8 +248,8 @@ try {
 		throw new RuntimeException( json_encode( $validation['errors'], JSON_THROW_ON_ERROR ) );
 	}
 	$data = array_merge( $validation['validated'], theme_generator_get_name_variations( 'Acme Elemental Acceptance', 'acme' ) );
-	theme_generator_update_composer_package( $target, $data['composer_package'] );
 	theme_generator_process_files( $target, theme_generator_create_replacement_map( $data ), 'stwp', 'acme' );
+	theme_generator_update_composer_package( $target, $data['composer_package'] );
 	theme_generator_remove_source_only_files( $target );
 	$fs->remove( $target . '/.github' );
 	$source_receipt = $json->read( $source . '/st-toolkit.json' );
@@ -261,7 +262,8 @@ try {
 		throw new RuntimeException( 'Generation lost the UI-profile receipt coverage.' );
 	}
 	$manifest = $json->read( $target . '/composer.json' );
-	if ( 'acme-inc/elemental-acceptance' !== ( $manifest['name'] ?? null ) || '^1.1' !== ( $manifest['require-dev']['snailtheme/wp-starter-toolkit'] ?? null ) ) {
+	$source_composer = $json->read( $source . '/composer.json' );
+	if ( 'acme-inc/elemental-acceptance' !== ( $manifest['name'] ?? null ) || ( $source_composer['require-dev']['snailtheme/wp-starter-toolkit'] ?? null ) !== ( $manifest['require-dev']['snailtheme/wp-starter-toolkit'] ?? null ) ) {
 		throw new RuntimeException( 'Generated Composer identity/package references were corrupted.' );
 	}
 	$json->write( $target . '/.st-elemental-generated-composer.json', $manifest );

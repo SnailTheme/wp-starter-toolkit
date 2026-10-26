@@ -24,6 +24,7 @@
     "test:acceptance": [
       "@php tests/acceptance.php",
       "@php tests/bundles.php",
+      "@php tests/schema.php",
       "@php tests/elementals-harness-safety.php",
       "@php tests/agent-docs.php"
     ],

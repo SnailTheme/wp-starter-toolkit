@@ -58,15 +58,24 @@ $render_width = static function ( mixed $width ) use ( $custom ): string {
 	return render_block( $copy );
 };
 $checks = 0;
+$has_width = static function ( string $html, string $width ) use ( $namespace ): bool {
+	$document = new DOMDocument();
+	@$document->loadHTML( '<?xml encoding="utf-8" ?>' . $html );
+	$root = $document->getElementsByTagName( 'div' )->item( 0 );
+	return $root instanceof DOMElement && 1 === preg_match(
+		'/(?:^|;)\\s*--' . preg_quote( $namespace, '/' ) . '-el-container-custom-width:\\s*' . preg_quote( $width, '/' ) . '\\s*(?:;|$)/',
+		$root->getAttribute( 'style' )
+	);
+};
 foreach ( array( '10px;background:red', 'url(https://example.com)', 'calc(100% + 1px)', '-12rem', array( '40rem' ), '0rem', '0px', '0%', str_repeat( '9', 500 ) . 'px' ) as $invalid ) {
 	$html = $render_width( $invalid );
-	if ( ! str_contains( $html, '--' . $namespace . '-el-container-custom-width:60rem;' ) ) {
+	if ( ! $has_width( $html, '60rem' ) ) {
 		throw new RuntimeException( 'Invalid custom width did not fall back to a safe length: ' . wp_json_encode( $invalid ) );
 	}
 	++$checks;
 }
 foreach ( array( '320px', '.5rem', '12em', '72ch', '80%', '90vw', ' 40rem ' ) as $valid ) {
-	if ( ! str_contains( $render_width( $valid ), '--' . $namespace . '-el-container-custom-width:' . trim( $valid ) . ';' ) ) {
+	if ( ! $has_width( $render_width( $valid ), trim( $valid ) ) ) {
 		throw new RuntimeException( 'A valid custom width was not preserved: ' . $valid );
 	}
 	++$checks;

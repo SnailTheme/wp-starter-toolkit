@@ -156,9 +156,37 @@ composer st-toolkit -- blocks:install elementals --yes
 ```
 
 It installs Wrapper, Container, Heading, Text, Columns/Column, Grid/Grid Cell,
-and Content With Image together. Names follow the theme's namespace, such as
-`acme/el-wrapper` in `blocks/acme-el-wrapper/`. Bundle members cannot be
-renamed independently or installed with a destination argument.
+Content With Image, and FAQ together. The bundle requires shared core `1.2.0`.
+Names follow the theme's namespace, such as
+`acme/el-wrapper` in `blocks/acme-el-wrapper/`. The bundle takes no destination
+argument. Its original nine members cannot be installed or renamed independently.
+
+FAQ is also available independently, without replacing the other elements:
+
+```bash
+composer st-toolkit -- blocks:install el-faq el-faq --dry-run
+composer st-toolkit -- blocks:install el-faq el-faq --yes
+```
+
+The original nine elements remain bundle-only. FAQ uses native exclusive
+disclosures, a per-instance first-open setting, and optional head-only schema.
+Put section headings in `el-heading`; the FAQ adds no container or section UI.
+
+## Schema Providers
+
+Shared core `1.2.0` supplies guarded `st_wp_core_schema_*` APIs and optional
+`inc/schema.php` overrides. Register supplied breadcrumb trails before
+`get_header()`. A block's optional `block-bootstrap.php` registers metadata
+providers, which inspect parsed content before the graph is printed in
+`wp_head`; they must not render blocks or execute shortcodes. FAQ contributions
+combine into one canonical `FAQPage`, independent of SEO-plugin output.
+
+Run `composer st-toolkit init` or `composer toolkit:docs-update` for the focused
+schema guide and the canonical `wp-starter-schemas` skill with its Claude
+adapter. Docs updates do not install core or blocks. FAQ structured data does
+not imply eligibility for Google FAQ rich results.
+
+## Bundle Safety
 
 The complete bundle is staged and validated before target writes. The plan
 lists every overwrite, and confirmed installs create one file-scoped backup
@@ -268,9 +296,9 @@ old.
 
 ## Agent Workflows
 
-`composer st-toolkit init` installs local guides and six task skills for
+`composer st-toolkit init` installs local guides and seven task skills for
 elemental compositions, block development, assets, core overrides, toolkit
-operations and validation. The conventions have one maintained source:
+operations, schemas and validation. The conventions have one maintained source:
 
 ```text
 AGENTS.md
@@ -313,6 +341,7 @@ Run the package checks before publishing:
 ```bash
 composer validate --strict
 composer test:acceptance
+node tests/slider-editor.cjs
 ```
 
 The offline suite covers core/UI/component checks, bundle installation and
@@ -329,6 +358,35 @@ These opt-in integration checks run Composer/npm and require a clean unlocked
 Bare source. They never modify the source. Reports distinguish running, failed,
 and passed checks; local path repositories test unreleased toolkit code, not a
 published GitHub tag.
+
+For real WordPress integration, install the Elementals in an isolated test site
+with ACF PRO enabled. Run each suite in a separate WP-CLI process from that
+site's WordPress root, using the toolkit's absolute path:
+
+```bash
+wp eval 'require "/absolute/toolkit/tests/elementals-wordpress.php";'
+wp eval 'require "/absolute/toolkit/tests/elementals-edge-cases.php";'
+wp eval 'require "/absolute/toolkit/tests/schema-faq-wordpress.php";'
+wp eval 'require "/absolute/toolkit/tests/wp7-elementals.php";'
+wp eval 'require "/absolute/toolkit/tests/schema-wordpress.php";'
+wp eval 'define("REST_REQUEST", true); require "/absolute/toolkit/tests/schema-wordpress.php";'
+```
+
+The Kitchen Sink suites create/update their owned test pages; they are not
+read-only production checks. `wp7-elementals.php` is read-only and requires
+WordPress 7+. The schema suite removes its temporary synced-pattern fixtures
+in `finally`. Check actual frontend/head output and the authenticated editor,
+not only CLI rendering. Current validation includes WordPress 7.1.3, ACF PRO
+6.8.10 and PHP 8.2.29 on Linux/Brave across Bare, Blueprint and Tailwind.
+
+Native Hide and viewport controls participate in early schema collection.
+Viewport-conditioned synced patterns need a certified sole root: prefer one
+outer Elemental Wrapper/Container. Ambiguous roots diagnose/skip their schema
+rather than rendering content early or claiming arbitrary output prediction.
+The installed schema guide documents the certification filter and ownership.
+Known upstream Gutenberg core-variable iframe warnings and ACF deprecated
+preference calls remain unsuppressed; browser errors or failures originating
+in toolkit/theme code must still be investigated.
 
 For Tailwind profile or compiler changes, use an installed Tailwind theme with
 its npm dependencies available:

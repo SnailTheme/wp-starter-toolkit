@@ -111,9 +111,9 @@ final class BlockBundleManifest {
 			}
 			$data = $this->json->read( $directory . '/st-block.json' );
 			if ( 1 !== ( $data['schema'] ?? null ) || $slug !== ( $data['source_slug'] ?? null )
-				|| true !== ( $data['bundle_only'] ?? null ) || 'stwp' !== ( $data['source_namespace'] ?? 'stwp' )
+				|| ! is_bool( $data['bundle_only'] ?? null ) || 'stwp' !== ( $data['source_namespace'] ?? 'stwp' )
 				|| ! empty( $data['npm_dependencies'] ) || ! empty( $data['shared_assets'] ) ) {
-				throw new RuntimeException( 'Invalid bundle-only member (dependencies/shared assets are not supported): ' . $slug );
+				throw new RuntimeException( 'Invalid bundle member (dependencies/shared assets are not supported): ' . $slug );
 			}
 			BlockBundlePaths::sourceFiles( $directory . '/files' );
 			if ( file_exists( $directory . '/theme-files' ) || is_link( $directory . '/theme-files' ) ) {

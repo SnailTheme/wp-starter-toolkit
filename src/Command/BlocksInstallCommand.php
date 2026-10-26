@@ -100,7 +100,7 @@ final class BlocksInstallCommand extends ToolkitCommand {
 		if ( ! $plan['core_version_satisfied'] ) {
 			$output->writeln(
 				sprintf(
-					'<error>Block "%s" requires core %s. Installed core is %s.</error>',
+					'<error>Block "%s" requires core %s. Installed core is %s. Run composer toolkit:core-update first.</error>',
 					$manifest->sourceSlug(),
 					$plan['required_core_version'],
 					$theme->coreVersion

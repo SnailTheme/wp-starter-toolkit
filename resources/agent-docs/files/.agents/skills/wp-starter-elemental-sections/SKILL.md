@@ -2,7 +2,7 @@
 name: wp-starter-elemental-sections
 description: Compose editable WordPress page sections from this theme's el-* blocks. Use for building or changing section layouts, not for inventing new block types.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Compose Elemental Sections
 
 Read [AGENTS.md](../../../AGENTS.md), then the composition and field contracts in
@@ -21,6 +21,12 @@ Read [AGENTS.md](../../../AGENTS.md), then the composition and field contracts i
   Grid/Grid Cell for responsive tracks/spans, and Content With Image for native
   copy/buttons plus an ACF attachment. Columns accept only Column children;
   Grids accept only Grid Cells. Respect each element's native-content allowlist.
+- Use `el-faq` for an entire FAQ, with its own ACF question/answer repeater,
+  not nested native content. Place any section heading in a preceding
+  `el-heading`. The first item opens by default, one at a time per instance.
+  Its schema setting defaults on; follow [Schemas and FAQ](../../schemas.md)
+  for visible-content parity and project schema ownership. FAQ can install
+  alone as `composer st-toolkit blocks:install el-faq el-faq` on core `1.2.0`+.
 - Keep heading levels in native Heading blocks. Use the element's controls
   rather than replacing its markup with profile utility classes or ACF-rich
   text fields. Keep templates editable, not globally locked.

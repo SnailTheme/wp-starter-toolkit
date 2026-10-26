@@ -2,7 +2,7 @@
 name: wp-starter-validation
 description: Verify theme changes before handoff or commit, including PHP standards, built assets, POT freshness, and WordPress editor/frontend behavior.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Validate A Theme Change
 
 Read [CLI and toolkit](../../cli_and_toolkit.md) for available commands and
@@ -24,6 +24,16 @@ the project's actual PHP/Composer/Node environment before running tools.
   duplicate, field edits, save/reload, long/empty content, missing images and
   responsive layouts. For elementals, verify weighted columns, grid span
   clamping, custom container widths and native Wrapper controls.
+- For structured-data or FAQ changes, use [Schemas and FAQ](../../schemas.md).
+  Inspect the actual head graph, not just rendered block HTML. Verify safe
+  JSON encoding, canonical IDs, consecutive breadcrumb positions, idempotent
+  registration and rejected late calls. Test nested/synced FAQ discovery,
+  cycles, Query Loop exclusion, disabled/protected/preview contexts, and
+  unchanged ACF/WordPress context. Check multiple FAQs aggregate once without
+  changing SEO-plugin output or executing shortcodes during collection.
+  Verify visible answers match schema, incomplete rows are omitted, and
+  native FAQ keyboard/first-open/single-open behavior survives duplication,
+  save/reload, long content and each UI profile's responsive layouts.
 - Finish with `git diff --check`. Report actual runtime versions, tests run,
   failures and untested platforms. A historical fixture or successful build
   alone does not prove runtime correctness or latest-WordPress support.

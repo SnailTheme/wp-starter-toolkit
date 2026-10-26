@@ -2,7 +2,7 @@
 name: wp-starter-block-development
 description: Create or modify this theme's reusable WordPress/ACF blocks, render templates, fields, and iframe-safe assets. Use when block implementation must change rather than just page composition.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.0 -->
 # Develop Theme Blocks
 
 Read [Blocks and ACF](../../blocks_and_acf.md) and
@@ -13,8 +13,9 @@ block and `ST_WP_CORE_THEME_PATTERNS` before choosing names or helper calls.
   Blocks v3 with ACF PRO 6.6+. Do not copy obsolete edit-mode or v2 shims.
 - Derive namespace and slug from the registered block name/theme patterns.
   Preserve stable `st_wp_core_*` APIs; never rename them for branding.
-- Give each elemental block one named InnerBlocks slot. Enforce parent/child
-  relationships in metadata and InnerBlocks, and keep templates editable.
+- Give content-composing elements one named InnerBlocks slot. The dedicated
+  FAQ element instead owns an ACF repeater and has no InnerBlocks slot.
+  Enforce parent/child relationships in metadata and InnerBlocks, and keep templates editable.
   Prefer native heading, paragraph, list, quote and button blocks for content.
 - Native-only elements need no dummy ACF groups. For ACF-backed blocks, use
   Fields/Settings tabs and the established groups, double-underscore leaves
@@ -30,6 +31,11 @@ block and `ST_WP_CORE_THEME_PATTERNS` before choosing names or helper calls.
 - Keep BEM classes, custom properties and Sass block-owned. Do not depend on
   Blueprint containers/variables, Tailwind utility markup or optional animation
   libraries. Content must wrap without widening the page.
+- For schema-producing blocks, read [Schemas and FAQ](../../schemas.md).
+  Register an early provider from block-local `block-bootstrap.php`; do not
+  collect schema by rendering block trees or adding nodes in render templates.
+  FAQ shares raw-data normalization between its provider and visible output,
+  and uses native details/summary without accordion JavaScript.
 
 Run source builds, PHP/WPCS and POT generation as applicable. Verify insert,
 nest/reorder, duplicate, live field edits, save/reload, missing/long content and

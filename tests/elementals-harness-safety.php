@@ -69,7 +69,7 @@ try {
 	}
 	$validate = static fn (): array => $harness['validate']( $valid, 'acme' );
 	$summary = $validate();
-	$assert( 9 === $summary['blocks'] && 7 === $summary['acf_groups'] && 18 === $summary['block_css'], 'Valid staged fixture failed' );
+	$assert( 10 === $summary['blocks'] && 8 === $summary['acf_groups'] && 20 === $summary['block_css'], 'Valid staged fixture failed' );
 	$mutate_json = static function ( string $path, callable $change, string $message ) use ( $json, $fs, $reject, $validate ): void {
 		$before = file_get_contents( $path );
 		try {
@@ -110,7 +110,7 @@ try {
 	$fs->dumpFile( $valid . '/' . $managed, $before . "\n/* unexpected change */\n" );
 	$reject( $validate, 'receipt' );
 	$fs->dumpFile( $valid . '/' . $managed, $before );
-	$assert( 9 === $validate()['blocks'], 'Restored fixture no longer valid' );
+	$assert( 10 === $validate()['blocks'], 'Restored fixture no longer valid' );
 
 	// A previous passed receipt and dependency/source-control trees are not input.
 	foreach ( array( 'vendor', 'node_modules', '.git', '.st-toolkit', '.agents', '.claude' ) as $excluded ) {

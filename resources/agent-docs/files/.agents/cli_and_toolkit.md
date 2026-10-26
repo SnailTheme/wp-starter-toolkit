@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.2.0 -->
+<!-- st-toolkit-agent-doc-version: 1.3.0 -->
 # CLI And Toolkit
 
 ## Composer Commands
@@ -140,6 +140,19 @@ references use the theme's configured block namespace. The toolkit validates
 the complete pack and confirms overwrites before target writes, then creates
 one backup and runs one build. A build failure leaves the installed files and
 reports the backup; fix the issue and rerun `npm run build`.
+
+The ten-member bundle includes FAQ. FAQ is also installable alone without
+reinstalling other Elementals:
+
+```bash
+composer st-toolkit -- blocks:install el-faq el-faq --dry-run
+composer st-toolkit blocks:install el-faq el-faq
+```
+
+FAQ requires shared core `1.2.0`. An old-core preflight failure is an instruction
+to inspect `composer toolkit:core-check`, preview the core update, and apply it
+when authorized before retrying. Updating docs alone does not install schema
+APIs or blocks. The original nine foundation members remain bundle-only.
 
 UI profile installs scaffold project-owned style sources and update the
 committed `st-toolkit.json` profile receipt. Choose the profile once, before
