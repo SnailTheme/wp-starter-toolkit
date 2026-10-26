@@ -26,11 +26,17 @@
       "@php tests/bundles.php",
       "@php tests/schema.php",
       "@php tests/elementals-harness-safety.php",
-      "@php tests/agent-docs.php"
+      "@php tests/agent-docs.php",
+      "@php tests/core-manifest.php",
+      "@php tests/ui-profile-maintainer.php"
     ],
     "test:bundles": "@php tests/bundles.php",
     "test:elementals-harness": "@php tests/elementals-harness-safety.php",
-    "test:agent-docs": "@php tests/agent-docs.php"
+    "test:agent-docs": "@php tests/agent-docs.php",
+    "test:maintainers": [
+      "@php tests/core-manifest.php",
+      "@php tests/ui-profile-maintainer.php"
+    ]
   },
   "minimum-stability": "stable",
   "prefer-stable": true

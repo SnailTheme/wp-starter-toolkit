@@ -2,7 +2,7 @@
 name: wp-starter-toolkit
 description: Initialize theme guidance or install, inspect, and update toolkit-managed docs, blocks, core, UI profiles, and components. Use for toolkit operations rather than ordinary implementation edits.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.0.1 -->
 # Operate The Theme Toolkit
 
 Read [CLI and toolkit](../../cli_and_toolkit.md). Run from the target theme
@@ -27,6 +27,13 @@ Do not assume the local package has unreleased commands.
   UI deletes managed scaffold paths and requires explicit migration approval.
   A component install may require an installed UI/core version; do not bypass
   those checks or overwrite project integrations to satisfy them.
+- Review destructive write/removal plans before confirmation. A manifest cannot
+  grant core ownership over `/inc/`, templates, blocks or general assets. If a
+  plan crosses that boundary, stop and diagnose rather than force installation.
+- Resource export/checksum commands are maintainer operations, not client setup.
+  Use the toolkit checkout and its maintainer guide. Keep raw source checksums
+  separate from installed-theme comparisons, which apply whitelabel replacements;
+  verify the exported bytes and a fresh installation before release.
 
 Report actual changes, conflicts, dependency/build results and backups. A build
 failure may leave installed files for diagnosis; use the command's recovery

@@ -2,7 +2,7 @@
 name: wp-starter-validation
 description: Verify theme changes before handoff or commit, including PHP standards, built assets, POT freshness, and WordPress editor/frontend behavior.
 ---
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.1 -->
 # Validate A Theme Change
 
 Read [CLI and toolkit](../../cli_and_toolkit.md) for available commands and
@@ -37,6 +37,18 @@ the project's actual PHP/Composer/Node environment before running tools.
 - Finish with `git diff --check`. Report actual runtime versions, tests run,
   failures and untested platforms. A historical fixture or successful build
   alone does not prove runtime correctness or latest-WordPress support.
+
+When changing toolkit installers, exports or validation logic, test observable
+invariants in disposable fixtures, not just a successful command or matching
+message. Hash actual written files against recorded checksums; compare the
+source and out-of-scope files before/after. Cover dry-run and cancellation with
+no writes, backups/recovery after a write failure, changed inputs after approval,
+and clear nonzero failures. Human-readable write plans must precede confirmation;
+JSON output must remain parseable on failures, including with PHP warnings enabled.
+Preserve JSON object/list distinctions and validate element types before sorting
+or comparing configuration; `{}` is not interchangeable with `[]` in Vite state.
+For static PHP checks, imports, comments and deferred callbacks must not masquerade
+as active helper/version declarations. Never execute package PHP just to inspect it.
 
 Use disposable fixtures for destructive installer/failure tests and keep test
 data/dependency trees out of product commits. Commit/push only when authorized;

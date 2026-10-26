@@ -214,13 +214,16 @@ try {
 	}
 
 	$editedGuides = array(
-		'AGENTS.md' => '1.2.0',
-		'.agents/core_and_overrides.md' => '1.1.0',
+		'AGENTS.md' => '1.3.0',
+		'.agents/core_and_overrides.md' => '1.2.0',
 		'.agents/blocks_and_acf.md' => '1.2.0',
-		'.agents/cli_and_toolkit.md' => '1.2.0',
+		'.agents/cli_and_toolkit.md' => '1.3.0',
 		'.agents/skills/wp-starter-elemental-sections/SKILL.md' => '1.0.0',
 		'.agents/skills/wp-starter-block-development/SKILL.md' => '1.0.0',
-		'.agents/skills/wp-starter-validation/SKILL.md' => '1.0.0',
+		'.agents/skills/wp-starter-validation/SKILL.md' => '1.1.0',
+		'.agents/skills/wp-starter-core-overrides/SKILL.md' => '1.0.0',
+		'.agents/skills/wp-starter-toolkit/SKILL.md' => '1.0.0',
+		'.agents/skills/wp-starter-assets/SKILL.md' => '1.0.0',
 	);
 	foreach ( $editedGuides as $relative => $previousVersion ) {
 		$header = str_ends_with( $relative, '/SKILL.md' ) ? "---\nname: previously-installed-skill\n---\n" : '';
@@ -248,8 +251,9 @@ try {
 
 	$skill = '.agents/skills/wp-starter-assets/SKILL.md';
 	$skillSource = str_replace( '<current_block_namespace>', 'acme', (string) file_get_contents( $manifest->filesRoot() . '/' . $skill ) );
+	$skillMarker = '<!-- st-toolkit-agent-doc-version: ' . $manifest->fileVersion( $skill ) . ' -->';
 	$fs->dumpFile( $theme->resolve( 'AGENTS.md' ), "<!-- st-toolkit-agent-doc-version: 0.1.0 -->\n# Older normal guide\n" );
-	$fs->dumpFile( $theme->resolve( $skill ), str_replace( $marker, '<!-- st-toolkit-agent-doc-version: 0.9.0 -->', $skillSource ) );
+	$fs->dumpFile( $theme->resolve( $skill ), str_replace( $skillMarker, '<!-- st-toolkit-agent-doc-version: 0.9.0 -->', $skillSource ) );
 	$upgrades = array_column( $installer->plan( $theme )['changes'], 'action', 'path' );
 	agent_docs_assert( 'update' === $upgrades['AGENTS.md'] && 'update' === $upgrades[ $skill ], 'Legacy first-line/frontmatter version upgrades were not detected.' );
 	$installer->install( $theme );
@@ -282,7 +286,7 @@ try {
 		foreach ( array( '', "---\r\nname: custom\r\n---\r\n" ) as $header ) {
 			$fs->dumpFile( $theme->resolve( $skill ), $header . '<!-- st-toolkit-agent-doc-version: ' . $version . " -->\r\n# Older managed workflow\r\n" );
 			$change = array_column( $installer->plan( $theme )['changes'], null, 'path' )[ $skill ];
-			agent_docs_assert( 'update' === $change['action'] && 'version-' . $version . '-to-1.0.0' === $change['reason'], 'Valid release/prerelease marker was not recognized: ' . $version );
+			agent_docs_assert( 'update' === $change['action'] && 'version-' . $version . '-to-' . $manifest->fileVersion( $skill ) === $change['reason'], 'Valid release/prerelease marker was not recognized: ' . $version );
 			$installer->install( $theme );
 			agent_docs_assert( $skillSource === file_get_contents( $theme->resolve( $skill ) ), 'Valid marker did not permit the managed upgrade: ' . $version );
 		}

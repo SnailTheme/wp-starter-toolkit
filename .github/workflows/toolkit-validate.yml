@@ -39,6 +39,9 @@ jobs:
       - name: Run acceptance checks
         run: composer test:acceptance
 
+      - name: Verify packaged core checksums
+        run: php bin/st-toolkit core:manifest --check --json
+
       - name: Set up Node
         uses: actions/setup-node@v4
         with:

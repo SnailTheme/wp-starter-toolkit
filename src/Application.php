@@ -24,6 +24,8 @@ use SnailTheme\WPStarterToolkit\Command\InitCommand;
 use SnailTheme\WPStarterToolkit\Command\UiInstallCommand;
 use SnailTheme\WPStarterToolkit\Command\UiListCommand;
 use SnailTheme\WPStarterToolkit\Command\UiStatusCommand;
+use SnailTheme\WPStarterToolkit\Command\UiProfileCommand;
+use SnailTheme\WPStarterToolkit\Command\CoreManifestCommand;
 use Symfony\Component\Console\Application as ConsoleApplication;
 
 /**
@@ -37,6 +39,7 @@ final class Application extends ConsoleApplication {
 		parent::__construct( 'ST WP Starter Toolkit', '1.4.0' );
 
 		$this->add( new CoreCheckCommand() );
+		$this->add( new CoreManifestCommand() );
 		$this->add( new CoreUpdateCommand() );
 		$this->add( new CoreRollbackCommand() );
 		$this->add( new DocsUpdateCommand() );
@@ -46,6 +49,8 @@ final class Application extends ConsoleApplication {
 		$this->add( new BlocksInstallCommand() );
 		$this->add( new UiListCommand() );
 		$this->add( new UiStatusCommand() );
+		$this->add( new UiProfileCommand() );
+		$this->add( new UiProfileCommand( true ) );
 		$this->add( new UiInstallCommand() );
 		$this->add( new ComponentsListCommand() );
 		$this->add( new ComponentsInstallCommand() );
