@@ -36,7 +36,7 @@ final class Application extends ConsoleApplication {
 	 * Build the CLI application with all v1 commands.
 	 */
 	public function __construct() {
-		parent::__construct( 'ST WP Starter Toolkit', '1.4.0' );
+		parent::__construct( 'ST WP Starter Toolkit', '1.5.0' );
 
 		$this->add( new CoreCheckCommand() );
 		$this->add( new CoreManifestCommand() );
