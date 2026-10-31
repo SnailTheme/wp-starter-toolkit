@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.2.1 -->
+<!-- st-toolkit-agent-doc-version: 1.2.2 -->
 # Core And Overrides
 
 ## Directory Roles
@@ -15,8 +15,11 @@ project-selected integrations installed below `/inc/components/`. Customize an
 installed component in `/inc/components/`; do not move the generic loader out
 of core.
 
-The core updater owns only `/core/` and the `core/` directories under
+New core writes belong only to `/core/` and the `core/` directories under
 `/assets/scss/`, `/assets/scripts/`, `/assets/css/` and `/assets/js/`.
+The manifest also names six legacy flat core-admin/core-customizer source and
+output files for removal. Those explicit migration exceptions do not authorize
+wildcards over other project assets; inspect the actual removal list.
 Do not expand a manifest glob or removal entry to include `/inc/`, blocks,
 templates or generic assets. Component installation into project-owned
 `/inc/components/toolkit/` is a separate operation, not core-update ownership.
@@ -69,6 +72,17 @@ add_filter( 'st_wp_core_enable_plugin_suggestions_notice', '__return_false' );
 
 Use `st_wp_core_files` or `st_wp_core_should_load_file` only when an entire core
 module should not load.
+
+`st_wp_core_enable_customizer` hides only the Customizer UI shell. Saved theme
+mods still affect the frontend through `/core/customizer-runtime.php`.
+Disable a complete feature with its registry filter, for example
+`st_wp_core_enable_customizer_animatecss`, rather than assuming that hiding the
+UI disables animation assets. Read the registry for the actual feature switch.
+
+Customizer runtime is an explicit override-location exception: project callbacks
+and feature filters belong in `/inc/customizer-functions.php`, loaded before
+feature fallbacks, not an inferred `/inc/customizer-runtime.php`. Filters that
+prevent feature loading must be registered before that loading happens.
 
 ## Schema Ownership
 

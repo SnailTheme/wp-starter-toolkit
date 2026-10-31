@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.3.1 -->
+<!-- st-toolkit-agent-doc-version: 1.3.2 -->
 # Theme Agent Guide
 
 This file is the entrypoint for maintainers and coding agents working inside
@@ -30,10 +30,12 @@ The current namespace line is refreshed by `composer st-toolkit init` or
 - [Core and overrides](.agents/core_and_overrides.md)
 - [Scripts and styles](.agents/scripts_and_styles.md)
 - [Style guidelines](.agents/style_guidelines.md)
+- [AnimateCSS](.agents/animations.md)
 - [Template tags and helpers](.agents/template_tags_and_helpers.md)
 - [Blocks and ACF](.agents/blocks_and_acf.md)
 - [Schemas and FAQ](.agents/schemas.md)
 - [CLI and toolkit](.agents/cli_and_toolkit.md)
+- [Updates and releases](.agents/updates_and_releases.md)
 
 ## Task Skills
 
@@ -45,6 +47,7 @@ Load the workflow matching the task, then only its relevant guides:
 - [Work with assets](.agents/skills/wp-starter-assets/SKILL.md)
 - [Customize core behavior safely](.agents/skills/wp-starter-core-overrides/SKILL.md)
 - [Operate the toolkit](.agents/skills/wp-starter-toolkit/SKILL.md)
+- [Update toolkit and theme](.agents/skills/wp-starter-updates/SKILL.md)
 - [Validate a change](.agents/skills/wp-starter-validation/SKILL.md)
 
 Canonical skills live in `.agents/skills/`. Claude's `.claude/skills/`
@@ -68,6 +71,9 @@ permissions and workspace trust still apply; this setup changes neither.
 - Treat the locked UI profile as the project's permanent styling foundation;
   replacement is an exceptional destructive migration.
 - Keep reusable blocks independent from the active UI profile.
+- Use BEM for owned classes and nested Sass; keep block-wide style modifiers
+  on their outer root. Read the style/blocks guides for variants. Optional
+  AnimateCSS must not make content depend on successful animation startup.
 - Compose Sections from the `el-*` foundation, rooted in `el-wrapper`, with an
   optional `el-container`; native-only elements need no dummy ACF fields. Read
   the Blocks and ACF guide before adding elemental or section compositions.

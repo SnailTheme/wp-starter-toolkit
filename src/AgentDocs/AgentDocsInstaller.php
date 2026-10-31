@@ -35,6 +35,7 @@ final class AgentDocsInstaller {
 		'/.claude/skills/wp-starter-assets/',
 		'/.claude/skills/wp-starter-core-overrides/',
 		'/.claude/skills/wp-starter-toolkit/',
+		'/.claude/skills/wp-starter-updates/',
 		'/.claude/skills/wp-starter-validation/',
 	);
 	private const OBSOLETE_GITIGNORE_LINES = array( '/.claude/skills/wp-starter-*/' );

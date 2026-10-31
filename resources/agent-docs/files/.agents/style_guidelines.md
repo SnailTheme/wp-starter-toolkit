@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.2.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.1 -->
 # Style Guidelines
 
 ## CSS Classes
@@ -16,6 +16,10 @@ Examples:
 
 Use modifiers for state or settings that affect a whole component. Put those
 modifiers on the root class when the setting belongs to the whole block.
+Retain the base class alongside the modifier; a modifier is not a replacement
+for the component root. Keep new reusable block classes and custom properties
+namespaced, as in `<namespace>-<block-name>__heading`. Inspect existing roots
+before changing them: installed blocks can use an established slug-based root.
 
 ## SCSS Shape
 
@@ -41,6 +45,12 @@ to move with the component.
 
 Avoid broad global selectors unless you are intentionally targeting WordPress,
 editor, or third-party library markup.
+
+Within a block stylesheet, put common rules first, followed by separate
+root-modifier groups for each style variant. Keep the modifier on the outer
+owned root, not a nested library element. See
+[block style variants](blocks_and_acf.md#style-variants) for the field/render
+contract; do not duplicate the common baseline in every variant.
 
 ## Third-Party Classes
 

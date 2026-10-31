@@ -2,12 +2,15 @@
 name: wp-starter-toolkit
 description: Initialize theme guidance or install, inspect, and update toolkit-managed docs, blocks, core, UI profiles, and components. Use for toolkit operations rather than ordinary implementation edits.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.1 -->
+<!-- st-toolkit-agent-doc-version: 1.0.2 -->
 # Operate The Theme Toolkit
 
 Read [CLI and toolkit](../../cli_and_toolkit.md). Run from the target theme
 root and inspect the installed command's help when its options are uncertain.
 Do not assume the local package has unreleased commands.
+For upgrading the dependency/copied core or preparing a maintainer release,
+use [the update workflow](../wp-starter-updates/SKILL.md); routine installation
+is not a whole-theme upgrade.
 
 - First setup is `composer install`, `npm install`, then
   `composer st-toolkit init`. Guidance/skills are local-only by default.

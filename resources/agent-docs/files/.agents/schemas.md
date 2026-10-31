@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.0.1 -->
 # Schemas And FAQ
 
 ## Ownership And Location
@@ -29,11 +29,24 @@ duplicating it. Use stable keys for contributions, not random IDs. Check the
 boolean registration result; never hide a failure by printing another script.
 No footer fallback is provided.
 
+`st_wp_core_schema_add()` accepts one node with a short `@type`, such as
+`Organization` (or a list of short type names). Pass no outer `@context` or
+`@graph`; core owns that envelope. URL-form type names and wrapped JSON-LD
+documents are rejected. Supply a stable caller-owned contribution key and
+check the boolean result rather than silently printing a fallback script.
+
 Output is suppressed in admin, feeds, REST, editor previews, and
 password-protected content. Registration does not override those protections.
 Use canonical page permalinks for identifiers, not raw request URLs, query
 strings, or hashes copied from previews. The final filter must preserve valid,
 safe graph data; let core perform JSON encoding instead of concatenating JSON.
+
+The supplied breadcrumb and FAQ helpers require a queried singular permalink.
+They return `false` on archives, search results and the posts index, even when
+the supplied items have valid URLs. Do not mistake this boundary for a timing
+failure. Generic node registration is not singular-only, but still obeys output
+suppression, validation and head timing; archive-specific structured data needs
+an explicit project policy rather than bypassing the specialized helpers.
 
 ## Supplied Breadcrumbs
 

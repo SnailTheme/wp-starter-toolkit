@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.3.1 -->
+<!-- st-toolkit-agent-doc-version: 1.3.2 -->
 # CLI And Toolkit
 
 ## Composer Commands
@@ -31,6 +31,9 @@ sourcemaps.
 ## Toolkit
 
 The toolkit is installed as a Composer development dependency.
+For dependency upgrades, copied-core updates and maintainer release ordering,
+use [Updates and releases](updates_and_releases.md). These are separate from
+simply installing the current lockfile or refreshing local instructions.
 
 Public repository:
 
@@ -97,6 +100,10 @@ Expected update targets:
 - `/assets/scripts/core/**`
 - `/assets/css/core/**`
 - `/assets/js/core/**`
+
+The manifest has six explicit legacy flat core-admin/core-customizer removals
+outside those directories. Review those named migration paths; do not broaden
+them into project-asset wildcards.
 
 Do not use toolkit core updates as a way to change project-specific code in
 `/inc/`, templates, generic assets, or local blocks.

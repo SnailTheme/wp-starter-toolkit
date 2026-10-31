@@ -2,7 +2,7 @@
 name: wp-starter-block-development
 description: Create or modify this theme's reusable WordPress/ACF blocks, render templates, fields, and iframe-safe assets. Use when block implementation must change rather than just page composition.
 ---
-<!-- st-toolkit-agent-doc-version: 1.1.0 -->
+<!-- st-toolkit-agent-doc-version: 1.1.1 -->
 # Develop Theme Blocks
 
 Read [Blocks and ACF](../../blocks_and_acf.md) and
@@ -31,6 +31,11 @@ block and `ST_WP_CORE_THEME_PATTERNS` before choosing names or helper calls.
 - Keep BEM classes, custom properties and Sass block-owned. Do not depend on
   Blueprint containers/variables, Tailwind utility markup or optional animation
   libraries. Content must wrap without widening the page.
+- For style variants, follow the guide's ACF Settings `__style` contract:
+  allowlist/default in PHP, base plus modifier on the outer root, common Sass
+  before separate variant groups, and escaped per-instance behavior options.
+  Do not confuse these with Gutenberg `is-style-*` choices or put a block-wide
+  modifier on a library node. Test variants together in frontend and previews.
 - For schema-producing blocks, read [Schemas and FAQ](../../schemas.md).
   Register an early provider from block-local `block-bootstrap.php`; do not
   collect schema by rendering block trees or adding nodes in render templates.

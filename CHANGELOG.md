@@ -1,6 +1,36 @@
 # Changelog
 
-## 1.4.0 (Unreleased)
+## 1.5.1 (Unreleased)
+
+- Clarify BEM naming, nested Sass and ACF-driven block style variants, including
+  root modifiers, validated settings and per-instance script options.
+- Add focused AnimateCSS guidance for activation, selected modules, in-view
+  markup, reduced motion, iframe limits and visible-content failure safeguards.
+- Add the shared `wp-starter-updates` skill and thin Claude adapter, covering
+  independent dependency/docs/core updates, version gates, partial-failure
+  recovery and toolkit-first maintainer releases.
+- Correct Customizer UI/runtime distinctions, singular-only breadcrumb/FAQ
+  boundaries, generic schema node shape and JavaScript minification constraints.
+- Update only changed guide content versions. Preserve markerless instructions
+  and unrelated Claude settings; ignore the new adapter through an exact rule.
+- Expand offline coverage to 2,579 assertions, including guidance upgrades from
+  the preceding release, new skill installation and project-file preservation.
+  Shared core and UI profile versions remain unchanged.
+
+Merge the reviewed `next` branch into `main` before tagging `v1.5.1` on the
+verified merge commit. Do not move existing public tags.
+
+## 1.5.0
+
+- Add `core:manifest` for checked, ownership-scoped core checksum generation.
+- Add `ui:profile-export` and `ui:profile-verify` for allowlisted workbench
+  resources, preserving raw source and installed-theme checksum distinctions.
+- Validate profile markers and JSON types, reject unsafe paths/stale approvals,
+  and retain backups with clear recovery diagnostics for failed exports.
+- Extend agent safeguards and offline acceptance coverage to 2,413 assertions.
+  Shared core remains `1.2.0`; Packagist distribution remains deferred.
+
+## 1.4.0
 
 - Package shared core `1.2.0` with head-only schema registration, supplied
   breadcrumb trails, early block providers, nested/synced content discovery,
@@ -28,9 +58,8 @@
   and ACF's deprecated preference call remain upstream warnings, not suppressed
   or patched vendor code. Other PHP/OS/browser combinations remain release gates.
 
-Merge reviewed `next` into `main` before tagging `v1.4.0`. Existing tags remain
-immutable. Publish the toolkit tag before changing the clean theme dependency;
-installed block/ACF fixtures stay on `blocks-dev`, never release-theme branches.
+Published as `v1.4.0` before the corresponding clean theme dependency update.
+Installed block/ACF fixtures stay on `blocks-dev`, never release-theme branches.
 
 ## 1.3.0
 
