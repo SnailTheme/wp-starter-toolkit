@@ -2,7 +2,7 @@
 name: wp-starter-assets
 description: Add or change theme CSS, Sass, Tailwind, JavaScript, asset handles, or enqueue behavior using the theme's Vite pipeline and registry.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.1 -->
+<!-- st-toolkit-agent-doc-version: 1.0.2 -->
 # Work With Theme Assets
 
 Read [Scripts and styles](../../scripts_and_styles.md) and
@@ -29,6 +29,13 @@ installer rather than editing state/markers to get past a failed preflight.
 - Respect project overrides and vendor feature selection. Do not replace
   selected animation modules with a whole-library import. Keep reusable block
   styles independent of the theme's UI profile.
+- For animation work, read [AnimateCSS](../../animations.md). Verify activation,
+  both registered handles and the wrapper/descendant contract before using
+  in-view classes. The runtime is frontend/DOMContentLoaded-only and provides
+  no automatic hidden-content fallback or ACF preview initialization. Preserve
+  visible content with scripts disabled, failed setup and reduced motion.
+- Theme JavaScript is minified, not bundled; do not introduce unresolved npm
+  imports or assume script ordering without real dependency declarations.
 
 Use `npm run dev` while actively watching changes. Always run `npm run build`
 before a commit and include the generated outputs. Check responsive rendering,

@@ -370,9 +370,12 @@ old.
 
 ## Agent Workflows
 
-`composer st-toolkit init` installs local guides and seven task skills for
+`composer st-toolkit init` installs local guides and eight task skills for
 elemental compositions, block development, assets, core overrides, toolkit
-operations, schemas and validation. The conventions have one maintained source:
+operations, updates/releases, schemas and validation. The focused guides cover
+BEM and block style variants, optional AnimateCSS and its runtime limits, and
+the distinction between dependency, docs and copied-core updates. The
+conventions have one maintained source:
 
 ```text
 AGENTS.md

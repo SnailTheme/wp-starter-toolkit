@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.2.0 -->
+<!-- st-toolkit-agent-doc-version: 1.2.1 -->
 # Scripts And Styles
 
 ## Source And Build Paths
@@ -100,6 +100,13 @@ startup, so restart `npm run dev` after the one-time UI selection.
 `npm run build` runs a clean production build, removes stale outputs, and must
 always be run before committing.
 
+Theme JavaScript under `/assets/scripts/` is minified with Terser, not bundled.
+Do not assume npm imports are resolved or bare module specifiers will run in
+the browser. Use browser-ready source and registered dependency handles, or
+explicitly implement and validate a bundling change. Underscore-prefixed theme
+JS files are not standalone build entries; merely naming one as a helper does
+not arrange for other scripts to load it.
+
 Include development/build tools when checking dependency security. Run
 `npm audit` and `composer audit --locked`, update affected lockfile entries,
 and rerun the build and code checks. A passing build does not establish that
@@ -178,6 +185,13 @@ Shared assets under `/plugins/` are registered for the block editor and by the
 front-end asset registry. Custom blocks can reference those handles from
 `block.json` `viewStyle`, `editorStyle`, `viewScript`, or `editorScript`
 without manually enqueueing the shared library.
+
+Registration alone does not enqueue a library. The registry gives these
+handles no custom dependency list; declare real dependencies in block script
+sidecars or project registration logic. Splide is installed on demand with its
+block, not shipped in a clean theme. AnimateCSS is a separate, optional
+theme/Customizer feature; see [AnimateCSS](animations.md) for activation,
+selected modules and the in-view markup contract.
 
 ## When To Use `/inc/scripts.php`
 

@@ -2,7 +2,7 @@
 name: wp-starter-schemas
 description: Add or change this theme's head-only structured data, supplied breadcrumb trails, FAQ contributions, and early block schema providers. Use for schema behavior rather than unrelated SEO configuration.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.0.1 -->
 # Work With Theme Schemas
 
 Read [Schemas and FAQ](../../schemas.md), then inspect the installed
@@ -12,6 +12,10 @@ These APIs require shared core `1.2.0`; a docs refresh does not update core.
 - Choose schema ownership explicitly. Do not remove, merge into, or reference
   SEO-plugin graphs automatically. Reuse the theme registry, not another
   JSON-LD script or footer fallback.
+- Generic registration takes one unwrapped node with a short `@type`; core
+  supplies `@context`/`@graph`. Breadcrumb/FAQ helpers need a singular permalink
+  and reject archives/search/posts-index requests. Do not turn an expected
+  `false` into duplicate output or fake singular context.
 - Register supplied breadcrumb `name`/`url` pairs before `get_header()`.
   Do not infer hierarchy, add breadcrumb markup, or use the request URI as a
   canonical identifier. Check registration return values and late diagnostics.

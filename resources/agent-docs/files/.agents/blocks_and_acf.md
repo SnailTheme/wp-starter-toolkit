@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.3.0 -->
+<!-- st-toolkit-agent-doc-version: 1.3.1 -->
 # Blocks And ACF
 
 ## Namespace Map
@@ -91,13 +91,23 @@ Render files should derive the namespace and block name from theme patterns and
 `$block['name']`:
 
 ```php
+$parts = explode( '/', (string) ( $block['name'] ?? '' ), 2 );
 $block_namespace = '';
 if ( defined( 'ST_WP_CORE_THEME_PATTERNS' ) && is_array( ST_WP_CORE_THEME_PATTERNS ) ) {
 	$block_namespace = (string) ( ST_WP_CORE_THEME_PATTERNS['block_namespace'] ?? '' );
 }
 
-$block_name = str_replace( "{$block_namespace}/", '', $block['name'] );
+if ( 2 === count( $parts ) && '' !== $parts[0] && '' !== $parts[1] ) {
+	$block_namespace = $parts[0];
+}
+
+$block_namespace = sanitize_key( $block_namespace );
+$block_name      = sanitize_key( $parts[1] ?? $parts[0] );
 ```
+
+Split the registered name once rather than globally replacing a namespace
+substring. Use the resulting namespace/slug consistently for fields, markup,
+and instance options; preserve stable core helper names.
 
 Build ACF field roots from `$block_namespace` and `$block_name`:
 
@@ -276,6 +286,52 @@ Vite compiles block SCSS to:
 Run `npm run dev` while actively editing styles. Run `npm run build` before
 committing. Do not hand-edit generated block CSS.
 
+## Style Variants
+
+For an ACF-driven block variant, use the Settings group's `__style` field,
+with explicit choices and a default. Validate that value again in PHP with an
+allowlist before constructing classes or JavaScript options. This is not the
+same API as Gutenberg `block.json` styles / `is-style-*`; do not add a second
+independent selector for an existing ACF setting.
+
+Keep the base class and add one modifier on the outer section/component root.
+The slider uses `slider-section slider-section--horizontal` or
+`slider-section slider-section--vertical`, not a modifier on its inner Splide
+element. Other blocks should use their own established or namespaced BEM root.
+
+Structure `_styles.scss` as common rules first, then distinct variant groups:
+
+```scss
+@mixin render {
+	.feature {
+		&__content {
+			min-width: 0;
+		}
+
+		&--compact {
+			.feature__content {
+				padding-block: 1rem;
+			}
+		}
+
+		&--spacious {
+			.feature__content {
+				padding-block: 2rem;
+			}
+		}
+	}
+}
+```
+
+Use that same mixin for frontend and scoped editor styles. When the variant
+also changes behavior, derive options from the validated PHP value and encode
+them in escaped data attributes. The slider's vertical variant sets Splide
+`direction: "ttb"` and a height; its initializer reads `data-splide` per instance.
+Do not infer behavior from page-wide selectors or hardcode one variant in JS.
+Test both variants together, field changes in iframe previews, duplicate
+instances, empty content and responsive layouts. Keep optional animation
+enhancements separate; see [AnimateCSS](animations.md).
+
 ## Block Scripts
 
 Block scripts live in:
@@ -308,6 +364,9 @@ For Block API v3, editor scripts must handle iframe rendering:
 - Skip empty markup with no rendered items.
 - Catch and report initialization errors so one bad block does not break the
   editor, without silently masking a failed preview.
+- If an initializer attaches persistent listeners, observers or library
+  instances, release them when its preview is replaced. Keep initialization
+  scoped to the owning preview so another block's rerender cannot mount it twice.
 
 Front-end scripts can usually initialize on `DOMContentLoaded`, but should use
 the same guards for missing dependencies, empty markup, and duplicate
