@@ -19,6 +19,8 @@ Package identity:
 
 ## Install
 
+Requires PHP: `8.3+`.
+
 Install in a theme or project as a development dependency:
 
 ```bash
@@ -31,6 +33,15 @@ For local package development:
 composer install
 ./bin/st-toolkit list
 ```
+
+CI tests on the minimum PHP branch. Composer resolves package dependencies for
+that branch's `.0` release (`config.platform.php`), so a newer development
+runtime cannot silently raise that minimum.
+Run `php .github/scripts/check-php-support.php` to check the requirement, lock,
+documentation and actual minimum-branch runtime against `.github/php-support.json`.
+The weekly/manual CI check warns near security EOL and fails once the minimum
+expires. Update the calendar from [PHP's support schedule](https://www.php.net/supported-versions.php)
+and align the requirement, platform, lock, CI and this README when advancing it.
 
 ## Commands
 

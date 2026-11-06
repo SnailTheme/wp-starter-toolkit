@@ -6,7 +6,7 @@
   "homepage": "https://www.snailtheme.com/",
   "require": {
     "composer/semver": "^3.4",
-    "php": ">=8.1",
+    "php": ">=8.3",
     "symfony/console": "^6.4 || ^7.0",
     "symfony/filesystem": "^6.4.50 || ^7.4.23",
     "symfony/finder": "^6.4 || ^7.0",
@@ -22,6 +22,7 @@
   ],
   "scripts": {
     "test:acceptance": [
+      "@php tests/php-support.php",
       "@php tests/filesystem-security.php",
       "@php tests/acceptance.php",
       "@php tests/component-scaffolding.php",
@@ -41,6 +42,11 @@
       "@php tests/core-manifest.php",
       "@php tests/ui-profile-maintainer.php"
     ]
+  },
+  "config": {
+    "platform": {
+      "php": "8.3.0"
+    }
   },
   "minimum-stability": "stable",
   "prefer-stable": true

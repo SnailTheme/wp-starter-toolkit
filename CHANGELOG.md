@@ -1,5 +1,24 @@
 # Changelog
 
+## 1.6.0 (2026-11-07)
+
+- Require PHP 8.3 or newer, matching the starter theme's chosen baseline.
+  PHP 8.1/8.2 installations must upgrade PHP before updating the toolkit.
+- Resolve development dependencies for PHP 8.3.0 and test that minimum branch
+  in CI. Preserve all locked package versions while refreshing platform metadata.
+- Add a verified PHP security-support calendar and weekly/manual guard for
+  requirement, platform, lock, README and actual CI runtime agreement. Warn
+  within 60 days of security EOL and fail when the baseline expires.
+- Add offline PHP-policy regressions for metadata drift, malformed inputs,
+  minimum-runtime mismatch, inclusive EOL and future baseline migrations.
+- Refine animation guidance and asset/validation skills for retained observer
+  queues: process old notifications before enrolling new children without
+  consuming later entrances or losing other wrappers' pending results.
+- Verify normal guide upgrades from v1.5.6 while preserving unchanged guides.
+  Existing projects must explicitly port the project-owned animation fix;
+  toolkit core/docs updates do not replace project assets. Advance only changed
+  guide versions; shared core, UI profiles and project defaults stay unchanged.
+
 ## 1.5.6 (2026-11-06)
 
 - Clarify component reinstallation as incoming-file scaffolding, not an automatic
