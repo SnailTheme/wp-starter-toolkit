@@ -1,7 +1,12 @@
 # Changelog
 
-## 1.5.4 (Unreleased)
+## 1.5.4 (2026-11-06)
 
+- Fix GHSA-6prc-h956-hxjq by requiring patched Symfony Filesystem releases
+  (`^6.4.50 || ^7.4.23`) and updating the lockfile to `7.4.23`. Preserve the
+  declared PHP compatibility and all unrelated locked dependencies.
+- Add locked-dependency auditing to CI and 18 offline regression checks for
+  dependency floors, local path traversal and valid child/stream paths.
 - Correct the image helper documentation: ACF arrays supply only an attachment
   ID; WordPress APIs resolve image data. Do not promise avoided database lookups
   or guaranteed high-density image candidates. Rendering behavior is unchanged.
@@ -9,22 +14,12 @@
   distribute the correction. Project-owned files remain outside that update.
 - Add 108 image/sprite regression checks and make update fixtures read the
   packaged core version instead of pinning the preceding patch version.
-- UI profile, agent guide and theme project versions are unchanged.
-
-## 1.5.3 (Unreleased)
-
 - Correct the published `1.5.1` entry using its verified annotated tag date and
   merge commit. Remove completed release instructions without moving any tag.
-- Shared core, UI profiles, agent guides and dependency versions are unchanged.
+- The offline acceptance suite now covers 2,706 assertions. UI profile, agent
+  guide and theme project versions are unchanged.
 
-## 1.5.2 (Unreleased)
-
-- Fix GHSA-6prc-h956-hxjq by requiring patched Symfony Filesystem releases
-  (`^6.4.50 || ^7.4.23`) and updating the lockfile to `7.4.23`. Preserve the
-  declared PHP compatibility and all unrelated locked dependencies.
-- Add locked-dependency auditing to CI and 18 offline regression checks for
-  dependency floors, local path traversal and valid child/stream paths.
-- Shared core, UI profiles and agent guide versions are unchanged.
+Includes the unpublished `1.5.2` and `1.5.3` work; those versions were not tagged.
 
 ## 1.5.1 (2026-10-31)
 
