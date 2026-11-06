@@ -1,5 +1,16 @@
 # Changelog
 
+## 1.5.4 (Unreleased)
+
+- Correct the image helper documentation: ACF arrays supply only an attachment
+  ID; WordPress APIs resolve image data. Do not promise avoided database lookups
+  or guaranteed high-density image candidates. Rendering behavior is unchanged.
+- Package shared core `1.2.1` with refreshed checksums so normal core updates
+  distribute the correction. Project-owned files remain outside that update.
+- Add 108 image/sprite regression checks and make update fixtures read the
+  packaged core version instead of pinning the preceding patch version.
+- UI profile, agent guide and theme project versions are unchanged.
+
 ## 1.5.3 (Unreleased)
 
 - Correct the published `1.5.1` entry using its verified annotated tag date and

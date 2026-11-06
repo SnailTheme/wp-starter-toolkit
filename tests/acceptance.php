@@ -17,6 +17,7 @@ use SnailTheme\WPStarterToolkit\Block\NpmRunner;
 use SnailTheme\WPStarterToolkit\Block\PackageJsonInspector;
 use SnailTheme\WPStarterToolkit\Component\ComponentInstaller;
 use SnailTheme\WPStarterToolkit\Component\ComponentManifest;
+use SnailTheme\WPStarterToolkit\Core\CoreManifest;
 use SnailTheme\WPStarterToolkit\Core\CoreUpdater;
 use SnailTheme\WPStarterToolkit\Support\BackupManager;
 use SnailTheme\WPStarterToolkit\Support\ReplacementEngine;
@@ -210,12 +211,13 @@ TEXT;
 		"/*\nTheme Name: ST Toolkit Acceptance\nVersion: 0.9.0\nText Domain: st-wp-starter\n*/\n"
 	);
 
-	$bootstrap         = $themePath . '/core/bootstrap.php';
-	$coreFile          = $themePath . '/core/core.php';
-	$bootstrapContents = $replacementEngine->applyThemePatterns( (string) file_get_contents( $bootstrap ), $patterns );
+	$bootstrap           = $themePath . '/core/bootstrap.php';
+	$coreFile            = $themePath . '/core/core.php';
+	$bootstrapContents   = $replacementEngine->applyThemePatterns( (string) file_get_contents( $bootstrap ), $patterns );
+	$packagedCoreVersion = CoreManifest::load()->version();
 	$filesystem->dumpFile(
 		$bootstrap,
-		str_replace( "define( 'ST_WP_CORE_VERSION', '1.2.0' );", "define( 'ST_WP_CORE_VERSION', '1.0.0' );", $bootstrapContents )
+		str_replace( "define( 'ST_WP_CORE_VERSION', '" . $packagedCoreVersion . "' );", "define( 'ST_WP_CORE_VERSION', '1.0.0' );", $bootstrapContents )
 	);
 	$filesystem->dumpFile( $coreFile, "<?php\n// Acceptance rollback marker.\n" . substr( (string) file_get_contents( $coreFile ), 6 ) );
 	$filesystem->remove( $themePath . '/core/customizer/animatecss.php' );
@@ -232,6 +234,7 @@ TEXT;
 
 	$theme        = ( new ThemeDetector() )->detect( $themePath );
 	$docsManifest = AgentDocsManifest::load();
+	acceptance_assert( '1.0.0' === $theme->coreVersion, 'Fixture core version was not downgraded for the update test.' );
 
 	acceptance_assert( '1.3.2' === $docsManifest->fileVersion( 'AGENTS.md' ), 'Changed agent guide did not receive its own content version.' );
 	acceptance_assert( '1.2.1' === $docsManifest->fileVersion( '.agents/scripts_and_styles.md' ), 'Changed asset guide did not receive its own content version.' );
@@ -260,7 +263,7 @@ TEXT;
 	$updated = ( new CoreUpdater() )->update( $theme );
 
 	acceptance_assert( is_file( $themePath . '/core/customizer/animatecss.php' ), 'Core update did not add a missing owned file.' );
-	acceptance_assert( str_contains( (string) file_get_contents( $bootstrap ), "'1.2.0'" ), 'Core update did not install the packaged version.' );
+	acceptance_assert( $packagedCoreVersion === ( new ThemeDetector() )->detect( $themePath )->coreVersion, 'Core update did not install the packaged version.' );
 	acceptance_assert( is_file( $themePath . '/core/components.php' ), 'Core update did not install the shared component loader.' );
 	acceptance_assert( str_contains( (string) file_get_contents( $themePath . '/core/components.php' ), 'RecursiveDirectoryIterator' ), 'Core component loader does not discover nested toolkit integrations.' );
 	acceptance_assert( is_file( $themePath . '/inc/acceptance-sentinel.php' ), 'Core update touched /inc/.' );
