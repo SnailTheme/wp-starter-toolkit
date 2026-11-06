@@ -2,7 +2,7 @@
 name: wp-starter-validation
 description: Verify theme changes before handoff or commit, including PHP standards, built assets, POT freshness, and WordPress editor/frontend behavior.
 ---
-<!-- st-toolkit-agent-doc-version: 1.1.4 -->
+<!-- st-toolkit-agent-doc-version: 1.1.5 -->
 # Validate A Theme Change
 
 Read [CLI and toolkit](../../cli_and_toolkit.md) for available commands and
@@ -38,6 +38,10 @@ the project's actual PHP/Composer/Node environment before running tools.
   Include multiple new siblings after an entered wrapper leaves view and fresh
   before-paint children in still-visible/running groups. Verify native observer
   results, single starts and no replay of completed or running siblings.
+  Reproduce queued intersections from before enrollment, including a native
+  callback that moves a wrapper off screen before another observer's delivery.
+  New children must wait for their own fresh result; other groups' queued
+  notifications and destroyed-subtree cleanup must remain intact.
 - For structured-data or FAQ changes, use [Schemas and FAQ](../../schemas.md).
   Inspect the actual head graph, not just rendered block HTML. Verify safe
   JSON encoding, canonical IDs, consecutive breadcrumb positions, idempotent

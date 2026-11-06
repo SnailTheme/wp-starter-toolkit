@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.2 -->
+<!-- st-toolkit-agent-doc-version: 1.0.3 -->
 # AnimateCSS
 
 ## Ownership And Activation
@@ -83,6 +83,10 @@ every chosen animation class has its corresponding module enabled.
   New children request a fresh intersection result once per wrapper/batch,
   including when a running group is already observed. Do not start later
   siblings immediately because their wrapper entered the viewport earlier.
+- Refreshing observation does not discard queued intersections. Consume those
+  results against the existing participants before enrolling new children;
+  never start a later child from an earlier snapshot or discard notifications
+  belonging to other wrappers.
 
 After inserting content, initialize that subtree explicitly:
 
