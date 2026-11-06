@@ -8,7 +8,7 @@
     "composer/semver": "^3.4",
     "php": ">=8.1",
     "symfony/console": "^6.4 || ^7.0",
-    "symfony/filesystem": "^6.4 || ^7.0",
+    "symfony/filesystem": "^6.4.50 || ^7.4.23",
     "symfony/finder": "^6.4 || ^7.0",
     "symfony/process": "^6.4 || ^7.0"
   },
@@ -22,6 +22,7 @@
   ],
   "scripts": {
     "test:acceptance": [
+      "@php tests/filesystem-security.php",
       "@php tests/acceptance.php",
       "@php tests/bundles.php",
       "@php tests/schema.php",

@@ -1,5 +1,14 @@
 # Changelog
 
+## 1.5.2 (Unreleased)
+
+- Fix GHSA-6prc-h956-hxjq by requiring patched Symfony Filesystem releases
+  (`^6.4.50 || ^7.4.23`) and updating the lockfile to `7.4.23`. Preserve the
+  declared PHP compatibility and all unrelated locked dependencies.
+- Add locked-dependency auditing to CI and 18 offline regression checks for
+  dependency floors, local path traversal and valid child/stream paths.
+- Shared core, UI profiles and agent guide versions are unchanged.
+
 ## 1.5.1 (Unreleased)
 
 - Clarify BEM naming, nested Sass and ACF-driven block style variants, including
