@@ -2,7 +2,7 @@
 name: wp-starter-toolkit
 description: Initialize theme guidance or install, inspect, and update toolkit-managed docs, blocks, core, UI profiles, and components. Use for toolkit operations rather than ordinary implementation edits.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.2 -->
+<!-- st-toolkit-agent-doc-version: 1.0.3 -->
 # Operate The Theme Toolkit
 
 Read [CLI and toolkit](../../cli_and_toolkit.md). Run from the target theme
@@ -30,6 +30,11 @@ is not a whole-theme upgrade.
   UI deletes managed scaffold paths and requires explicit migration approval.
   A component install may require an installed UI/core version; do not bypass
   those checks or overwrite project integrations to satisfy them.
+- Component reinstallation is incoming-file scaffolding, not a retirement-aware
+  upgrade. Compare old/new inventories and preserve a project baseline; old PHP
+  can still execute after its path disappears from the latest receipt. Follow
+  [manual migration](../../updates_and_releases.md#component-migration), never
+  treat `--force` as authority to delete unmatched integrations.
 - Review destructive write/removal plans before confirmation. A manifest cannot
   grant core ownership over `/inc/`, templates, blocks or general assets. If a
   plan crosses that boundary, stop and diagnose rather than force installation.

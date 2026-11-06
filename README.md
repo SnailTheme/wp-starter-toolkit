@@ -368,6 +368,19 @@ production build. Component manifests state their required core version, and
 installation stops with a `core:update` instruction when the loader/API is too
 old.
 
+Component installation is scaffolding, not a reconciled component upgrade.
+Reinstallation compares and writes only incoming package paths; `--force` permits
+replacing those conflicting files after backup. It does not remove retired paths
+or merge project edits. Old PHP below `inc/components/` can still execute even
+when the new package no longer contains it. Before migrating, back up the project,
+compare the old and new inventories, preserve customizations, and explicitly
+reconcile renamed/retired integrations and their hooks. Rebuild and test afterward.
+The current component receipt records the latest package files, not a complete
+inventory of surviving project files. Each install backs up the previous receipt
+and overwritten/new destinations, not every retired or unrelated project file.
+Core rollback is not component rollback; inspect the named backup and project
+baseline rather than assuming it reverses a manual migration.
+
 ## Agent Workflows
 
 `composer st-toolkit init` installs local guides and eight task skills for

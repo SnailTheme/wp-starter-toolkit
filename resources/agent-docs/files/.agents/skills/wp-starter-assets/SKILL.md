@@ -2,7 +2,7 @@
 name: wp-starter-assets
 description: Add or change theme CSS, Sass, Tailwind, JavaScript, asset handles, or enqueue behavior using the theme's Vite pipeline and registry.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.3 -->
+<!-- st-toolkit-agent-doc-version: 1.0.4 -->
 # Work With Theme Assets
 
 Read [Scripts and styles](../../scripts_and_styles.md) and
@@ -42,6 +42,9 @@ installer rather than editing state/markers to get past a failed preflight.
   clone. Late visibility checks must include nested overflowing children and
   text, not only the participant's border box or one ancestor range. Do not
   interrupt existing project animations while probing a selected reveal.
+  Historical `entered` state is not current intersection. Adding children to
+  old or still-running groups must request a current observation, not consume
+  their entrances off screen or wait forever for a threshold change.
 - Theme JavaScript is minified, not bundled; do not introduce unresolved npm
   imports or assume script ordering without real dependency declarations.
 

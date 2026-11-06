@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.3.2 -->
+<!-- st-toolkit-agent-doc-version: 1.3.3 -->
 # CLI And Toolkit
 
 ## Composer Commands
@@ -213,3 +213,13 @@ pipeline is available. Toolkit-owned component integrations use
 isolated below matching `toolkit/` directories. The installer checks the
 component's required shared core version before writing files; run
 `composer toolkit:core-update` first when instructed.
+
+Component reinstallation is incoming-file scaffolding, not a reconciled upgrade.
+`--force` replaces incoming conflicts after backup; it does not remove retired
+paths or merge customizations. Old PHP under `/inc/components/` still loads.
+Back up the project and compare the old/new package inventories before manually
+reconciling renamed integrations, hooks and assets. The latest receipt lists
+incoming files only; previous receipt history is in the named install backup.
+That backup does not capture every retired/custom file. Follow
+[Updates and releases](updates_and_releases.md#component-migration) rather than
+using core rollback or deleting unmatched integrations as an upgrade shortcut.
