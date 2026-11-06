@@ -175,6 +175,25 @@ try {
 	$before = agent_docs_snapshot( $theme->path );
 	$repeat = $installer->install( $theme );
 	agent_docs_assert( $before === agent_docs_snapshot( $theme->path ) && array( 'skip' ) === array_values( array_unique( array_column( $repeat['changes'], 'action' ) ) ), 'Equal-version repeat install did not skip docs/ignore rules.' );
+	$animationGuide = (string) file_get_contents( $theme->resolve( '.agents/animations.md' ) );
+	foreach ( array( 'window.stWpReveal?.init(subtree)', 'beforePaint: true', 'window.stWpReveal?.destroy(subtree)', '30 seconds', '10 seconds', 'Missing CSS/JavaScript', 'already-displayed content', 'Updating toolkit core or agent docs does not install this asset fix.' ) as $contract ) {
+		agent_docs_assert( str_contains( $animationGuide, $contract ), 'Animation guidance lost a lifecycle/ownership safeguard: ' . $contract );
+	}
+	$animationUpgrade = agent_docs_theme( $temp . '/animation-guide-upgrade' );
+	$previousAnimationVersions = array(
+		'.agents/animations.md' => '1.0.0',
+		'.agents/skills/wp-starter-assets/SKILL.md' => '1.0.2',
+		'.agents/skills/wp-starter-validation/SKILL.md' => '1.1.2',
+	);
+	foreach ( $previousAnimationVersions as $relative => $version ) {
+		$fs->dumpFile( $animationUpgrade->resolve( $relative ), "<!-- st-toolkit-agent-doc-version: $version -->\nPrevious animation guidance\n" );
+	}
+	$animationResult = $installer->install( $animationUpgrade );
+	foreach ( $previousAnimationVersions as $relative => $version ) {
+		$change = array_values( array_filter( $animationResult['changes'], static fn ( array $change ): bool => $change['path'] === $relative ) );
+		agent_docs_assert( 1 === count( $change ) && 'update' === $change[0]['action'], 'Previous animation guide was not updated: ' . $relative );
+		agent_docs_assert( file_get_contents( $animationUpgrade->resolve( $relative ) ) === file_get_contents( $theme->resolve( $relative ) ), 'Upgraded animation guidance differs from a fresh installation: ' . $relative );
+	}
 	if ( null !== ( new ExecutableFinder() )->find( 'git' ) ) {
 		$fs->dumpFile( $temp . '/empty-global-ignore', '' );
 		$git = new Process( array( 'git', '-c', 'init.templateDir=', 'init', '--quiet', $theme->path ) );

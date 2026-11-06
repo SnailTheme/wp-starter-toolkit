@@ -2,7 +2,7 @@
 name: wp-starter-validation
 description: Verify theme changes before handoff or commit, including PHP standards, built assets, POT freshness, and WordPress editor/frontend behavior.
 ---
-<!-- st-toolkit-agent-doc-version: 1.1.2 -->
+<!-- st-toolkit-agent-doc-version: 1.1.3 -->
 # Validate A Theme Change
 
 Read [CLI and toolkit](../../cli_and_toolkit.md) for available commands and
@@ -27,7 +27,14 @@ the project's actual PHP/Composer/Node environment before running tools.
 - When variants or animations change, test all variants together, invalid/missing
   settings and field rerenders. Check scripts disabled, failed initialization,
   reduced motion and editor visibility: hidden content is not a successful
-  animation. Use [AnimateCSS](../../animations.md) for the actual runtime limits.
+  animation. For reveal changes, reproduce late/repeated startup, dynamic
+  subtrees, malformed/disabled animation classes, partial observer failures,
+  cancellation and bounded cleanup. In a real browser test both assets, CSS
+  only, JS only and neither; check computed opacity/transforms, first-paint
+  behavior, keyboard focus and print across UI profiles. A visible-then-hidden
+  fade is a regression too. Cover nested zero-height overflow/images, target-only
+  disabled/long/paused CSS, and unrelated project animations; generic DOM doubles
+  cannot establish those outcomes. Use [AnimateCSS](../../animations.md) for limits.
 - For structured-data or FAQ changes, use [Schemas and FAQ](../../schemas.md).
   Inspect the actual head graph, not just rendered block HTML. Verify safe
   JSON encoding, canonical IDs, consecutive breadcrumb positions, idempotent

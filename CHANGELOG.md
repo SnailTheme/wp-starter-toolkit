@@ -1,5 +1,19 @@
 # Changelog
 
+## 1.5.5 (2026-11-06)
+
+- Document the starter's corrected animation reveal lifecycle: hide only after
+  CSS/observer validation, reveal once, and never hide painted content to replay
+  an entrance. Cover actual-element CSS, dynamic initialization and teardown.
+- Require visible content without JavaScript or optional CSS, scoped legacy
+  opacity safeguards, keyboard/print/reduced-motion recovery and bounded cleanup.
+- Refresh only the animation guide and asset/validation skills. Explain that
+  existing projects must port the project-owned asset fix explicitly; a core or
+  docs update does not install it. Preserve developer-owned markerless guides.
+- Add regressions for the revised guidance and upgrades from the preceding
+  three guide versions. Shared core, UI profiles and project defaults are
+  unchanged. Release tags belong on the reviewed main merge, not on next.
+
 ## 1.5.4 (2026-11-06)
 
 - Fix GHSA-6prc-h956-hxjq by requiring patched Symfony Filesystem releases
