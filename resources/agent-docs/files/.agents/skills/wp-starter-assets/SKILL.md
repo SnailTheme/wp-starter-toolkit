@@ -2,7 +2,7 @@
 name: wp-starter-assets
 description: Add or change theme CSS, Sass, Tailwind, JavaScript, asset handles, or enqueue behavior using the theme's Vite pipeline and registry.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.2 -->
+<!-- st-toolkit-agent-doc-version: 1.0.3 -->
 # Work With Theme Assets
 
 Read [Scripts and styles](../../scripts_and_styles.md) and
@@ -29,11 +29,19 @@ installer rather than editing state/markers to get past a failed preflight.
 - Respect project overrides and vendor feature selection. Do not replace
   selected animation modules with a whole-library import. Keep reusable block
   styles independent of the theme's UI profile.
-- For animation work, read [AnimateCSS](../../animations.md). Verify activation,
-  both registered handles and the wrapper/descendant contract before using
-  in-view classes. The runtime is frontend/DOMContentLoaded-only and provides
-  no automatic hidden-content fallback or ACF preview initialization. Preserve
-  visible content with scripts disabled, failed setup and reduced motion.
+- For animation work, read [AnimateCSS](../../animations.md) and inspect the
+  installed project assets; docs/core updates do not replace them. Keep the
+  always-enqueued reveal guard independent of optional animation activation.
+  Arm hidden content only after usable CSS and observer setup succeed. Do not
+  show content and then hide it to play an entrance: skip already-painted
+  on-screen content on late initialization. Dynamic insertion uses scoped
+  `window.stWpReveal.init()`/`destroy()`; `beforePaint: true` is only for a
+  synchronous insertion before paint. Preserve fail-open, focus, print,
+  reduced-motion and iframe behavior without global opacity-utility overrides.
+  Validate the actual target's inline/tag/ID animation rules, not a generic
+  clone. Late visibility checks must include nested overflowing children and
+  text, not only the participant's border box or one ancestor range. Do not
+  interrupt existing project animations while probing a selected reveal.
 - Theme JavaScript is minified, not bundled; do not introduce unresolved npm
   imports or assume script ordering without real dependency declarations.
 

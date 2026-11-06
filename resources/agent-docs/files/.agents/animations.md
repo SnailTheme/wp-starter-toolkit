@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.0.1 -->
 # AnimateCSS
 
 ## Ownership And Activation
@@ -9,6 +9,13 @@ project-editable sources remain outside `/assets/**/core/`:
 - `/assets/scss/styles-register/plugins/animatecss/animate.scss`
 - `/assets/scss/styles-register/plugins/animatecss/source/`
 - `/assets/scripts/scripts-register/plugins/animatecss/animate.js`
+- `/assets/scss/styles-register/plugins/animatecss/_reveal.scss`
+- `/assets/scss/styles-enqueue/animation-reveal.scss`
+
+The corrected contract below requires these starter assets and rebuilt outputs.
+Older projects must review and port those project-owned files explicitly.
+Updating toolkit core or agent docs does not install this asset fix. Inspect
+the actual runtime before assuming the initializer is available.
 
 `npm run build` produces the registered CSS and JS. Both handles are
 `plugins.animatecss.animate`, in their separate style/script registries.
@@ -47,42 +54,81 @@ subset, then rebuild. These local Sass modules are deliberately selectable;
 do not replace them with one import of the whole vendor distribution. Ensure
 every chosen animation class has its corresponding module enabled.
 
-## Current In-View Contract
+## In-View Contract
 
-The existing runtime runs once on frontend `DOMContentLoaded`:
+```html
+<section class="enter-view">
+  <p class="project-intro animate__animated" data-animate-class="animate__fadeIn">
+    Content is readable if optional animation is unavailable.
+  </p>
+</section>
+```
 
-- It observes `.enter-view` wrappers, using a bottom root margin of `-120px`.
-- On intersection it adds `entered` to that wrapper.
-- It reveals descendant `.animate__animated.opacity-0` elements by removing
-  `opacity-0` and adding their `data-animate-class` value.
-- Use one nonempty class token, such as `animate__fadeIn`, in that attribute.
-  A space-separated list is not valid for the runtime's `classList.add()` call.
-- Put the animated element inside the observed wrapper, not only on the
-  wrapper itself: `querySelectorAll()` searches descendants, excluding self.
+- Use one `animate__...` class token in `data-animate-class`; do not save the
+  selected animation class, a hiding utility, or runtime state in new markup.
+- The observed wrapper and animated element may also be the same element.
+- The runtime validates usable CSS/keyframes and observer setup before adding
+  its temporary `st-wp-reveal--pending` class. The pending element is hidden;
+  on intersection it fades/moves into view once, without a visible-then-hidden
+  waiting phase. The wrapper receives the compatibility class `entered`.
+- Validation uses the actual target's CSS, including tag/ID rules and inline
+  overrides. Already-running project animations are left alone. Late viewport
+  checks include nested overflowing images/boxes and text in collapsed wrappers.
+- Initialization is ready-state aware and idempotent. Already-painted on-screen
+  content found by a late initializer is left visible, not hidden to replay an
+  entrance. Off-screen content can still be armed normally.
+- Observation uses the viewport without the old negative bottom margin, so
+  short viewports and content near the page bottom can intersect.
 
-This is not a general dynamic-content initializer. It does not automatically
-observe later-inserted content, replay animations, or initialize ACF iframe
-previews. For a project enhancement that needs those behaviors, implement the
-appropriate lifecycle locally; use the ACF preview contract in
-[Blocks and ACF](blocks_and_acf.md#block-scripts), not a parent-document-only
-observer. Do not add animation dependencies to reusable Elementals or FAQ.
+After inserting content, initialize that subtree explicitly:
+
+```js
+window.stWpReveal?.init(subtree);
+```
+
+For a synchronous insert followed immediately by initialization, before the
+browser paints the new subtree, opt into animating its visible elements:
+
+```js
+container.append(subtree);
+window.stWpReveal?.init(subtree, {beforePaint: true});
+```
+
+Do not use `beforePaint: true` on already-displayed content: it permits the
+initializer to hide visible elements. A subtree within an existing `.enter-view`
+works too. Repeated initialization or script evaluation does not replay completed
+elements or multiply active observers/listeners. No whole-document mutation
+observer automatically initializes Ajax content. Before removing a subtree:
+
+```js
+window.stWpReveal?.destroy(subtree);
+subtree.remove();
+```
+
+Untriggered observations expire after 30 seconds and reveal their content,
+bounding retention if a caller forgets teardown. This means a slow reader may
+see later sections without animation. Individual animations, including delay,
+must be finite, unpaused and at most 10 seconds. End, cancellation, watchdog,
+focus, print and reduced-motion cleanup release listeners/timers and restore
+the normal project appearance.
 
 ## Visibility And Accessibility
 
-Prefer visible content as the baseline. The current runtime provides no
-automatic no-JavaScript/observer-error fallback: its `opacity-0` helper stays
-hidden until something explicitly removes it. Do not copy hidden markup into
-a template without a project-owned reveal/failure strategy, and do not assume
-disabling AnimateCSS always restores visibility; other CSS, including Tailwind
-utilities, may also define `opacity-0`.
+The small `animation-reveal` auto-enqueued stylesheet is a visibility safeguard,
+not an animation enabler. Keep it with the shared `_reveal.scss` partial even
+when another UI profile is installed. It overrides legacy hiding only on reveal
+markup, including Tailwind's utility, without redefining unrelated `opacity-0`
+classes. The optional AnimateCSS stylesheet also includes those guards.
 
-For progressive enhancement, apply a hidden starting state only after a
-working initializer has opted that element in; preserve visible content when
-scripts fail or are disabled and in editor previews. Any changed initializer
-must restore visibility when setup or animation fails.
+Missing CSS/JavaScript, unknown or disabled animation modules, failed observer
+setup and malformed tokens must leave content visible. Never replace that
+fallback with a global `.js` class or save the pending class/data attribute.
+Print, reduced motion (including a changed preference), and keyboard focus
+must reveal content without waiting for scrolling. Do not use exit or infinite
+animations to hide essential content after completion.
 
-The base module shortens animations for print and reduced-motion preferences;
-it does not remove `opacity-0`. Check those modes explicitly and provide a
-visible nonanimated outcome. Avoid exit animations on essential reading or
-interactive content. Keep project BEM classes as styling roots; animation
-classes are optional behavior hooks, not replacements for owned selectors.
+Editor content remains visible and unanimated. An iframe uses its own document;
+a parent-document observer is not an ACF preview initializer. Use the ACF
+contract in [Blocks and ACF](blocks_and_acf.md#block-scripts) for unrelated
+interactive behavior. Elementals and FAQ must not require animation to render.
+Keep project BEM roots; animation classes are optional behavior hooks.
