@@ -1,5 +1,11 @@
 # Changelog
 
+## 1.5.3 (Unreleased)
+
+- Correct the published `1.5.1` entry using its verified annotated tag date and
+  merge commit. Remove completed release instructions without moving any tag.
+- Shared core, UI profiles, agent guides and dependency versions are unchanged.
+
 ## 1.5.2 (Unreleased)
 
 - Fix GHSA-6prc-h956-hxjq by requiring patched Symfony Filesystem releases
@@ -9,7 +15,7 @@
   dependency floors, local path traversal and valid child/stream paths.
 - Shared core, UI profiles and agent guide versions are unchanged.
 
-## 1.5.1 (Unreleased)
+## 1.5.1 (2026-10-31)
 
 - Clarify BEM naming, nested Sass and ACF-driven block style variants, including
   root modifiers, validated settings and per-instance script options.
@@ -26,8 +32,8 @@
   the preceding release, new skill installation and project-file preservation.
   Shared core and UI profile versions remain unchanged.
 
-Merge the reviewed `next` branch into `main` before tagging `v1.5.1` on the
-verified merge commit. Do not move existing public tags.
+Released as annotated tag `v1.5.1` on merge commit
+`a196516aaebedef357da4c6fd746e1d787458d6e`.
 
 ## 1.5.0
 
