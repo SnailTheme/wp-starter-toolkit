@@ -2,7 +2,7 @@
 name: wp-starter-assets
 description: Add or change theme CSS, Sass, Tailwind, JavaScript, asset handles, or enqueue behavior using the theme's Vite pipeline and registry.
 ---
-<!-- st-toolkit-agent-doc-version: 1.0.4 -->
+<!-- st-toolkit-agent-doc-version: 1.0.5 -->
 # Work With Theme Assets
 
 Read [Scripts and styles](../../scripts_and_styles.md) and
@@ -45,6 +45,9 @@ installer rather than editing state/markers to get past a failed preflight.
   Historical `entered` state is not current intersection. Adding children to
   old or still-running groups must request a current observation, not consume
   their entrances off screen or wait forever for a threshold change.
+  Unobserving does not invalidate queued intersections. Process those against
+  existing participants before enrolling new ones, without losing other groups'
+  notifications. Do not assume a refreshed subscription makes every callback fresh.
 - Theme JavaScript is minified, not bundled; do not introduce unresolved npm
   imports or assume script ordering without real dependency declarations.
 

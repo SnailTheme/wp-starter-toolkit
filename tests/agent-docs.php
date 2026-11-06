@@ -176,7 +176,7 @@ try {
 	$repeat = $installer->install( $theme );
 	agent_docs_assert( $before === agent_docs_snapshot( $theme->path ) && array( 'skip' ) === array_values( array_unique( array_column( $repeat['changes'], 'action' ) ) ), 'Equal-version repeat install did not skip docs/ignore rules.' );
 	$animationGuide = (string) file_get_contents( $theme->resolve( '.agents/animations.md' ) );
-	foreach ( array( 'window.stWpReveal?.init(subtree)', 'beforePaint: true', 'window.stWpReveal?.destroy(subtree)', '30 seconds', '10 seconds', 'Missing CSS/JavaScript', 'already-displayed content', 'historical compatibility state', 'fresh intersection result', 'Updating toolkit core or agent docs does not install this asset fix.' ) as $contract ) {
+	foreach ( array( 'window.stWpReveal?.init(subtree)', 'beforePaint: true', 'window.stWpReveal?.destroy(subtree)', '30 seconds', '10 seconds', 'Missing CSS/JavaScript', 'already-displayed content', 'historical compatibility state', 'fresh intersection result', 'queued intersections', 'before enrolling new children', 'Updating toolkit core or agent docs does not install this asset fix.' ) as $contract ) {
 		agent_docs_assert( str_contains( $animationGuide, $contract ), 'Animation guidance lost a lifecycle/ownership safeguard: ' . $contract );
 	}
 	$animationUpgrade = agent_docs_theme( $temp . '/animation-guide-upgrade' );
@@ -217,6 +217,24 @@ try {
 	foreach ( $released155Versions as $relative => $version ) {
 		agent_docs_assert( 'update' === $from155[ $relative ]['action'], 'Released 1.5.5 guidance did not update normally: ' . $relative );
 		agent_docs_assert( file_get_contents( $theme->resolve( $relative ) ) === file_get_contents( $released155->resolve( $relative ) ), 'Released 1.5.5 guidance differs after normal update: ' . $relative );
+	}
+	$released156 = agent_docs_theme( $temp . '/guidance-from-156' );
+	$installer->install( $released156 );
+	$released156Versions = array(
+		'.agents/animations.md' => '1.0.2',
+		'.agents/skills/wp-starter-assets/SKILL.md' => '1.0.4',
+		'.agents/skills/wp-starter-validation/SKILL.md' => '1.1.4',
+	);
+	foreach ( $released156Versions as $relative => $version ) {
+		$fs->dumpFile( $released156->resolve( $relative ), "<!-- st-toolkit-agent-doc-version: $version -->\nPrevious released guidance\n" );
+	}
+	$from156 = array_column( $installer->install( $released156 )['changes'], null, 'path' );
+	foreach ( $released156Versions as $relative => $version ) {
+		agent_docs_assert( 'update' === $from156[ $relative ]['action'], 'Released 1.5.6 guidance did not update normally: ' . $relative );
+		agent_docs_assert( file_get_contents( $theme->resolve( $relative ) ) === file_get_contents( $released156->resolve( $relative ) ), 'Released 1.5.6 guidance differs after normal update: ' . $relative );
+	}
+	foreach ( array( '.agents/style_guidelines.md', '.agents/blocks_and_acf.md' ) as $relative ) {
+		agent_docs_assert( 'skip' === $from156[ $relative ]['action'], 'Unchanged guide must not be refreshed during this upgrade: ' . $relative );
 	}
 	if ( null !== ( new ExecutableFinder() )->find( 'git' ) ) {
 		$fs->dumpFile( $temp . '/empty-global-ignore', '' );
