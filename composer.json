@@ -24,6 +24,7 @@
     "test:acceptance": [
       "@php tests/filesystem-security.php",
       "@php tests/acceptance.php",
+      "@php tests/component-scaffolding.php",
       "@php tests/image-helpers.php",
       "@php tests/bundles.php",
       "@php tests/schema.php",
@@ -33,6 +34,7 @@
       "@php tests/ui-profile-maintainer.php"
     ],
     "test:bundles": "@php tests/bundles.php",
+    "test:components": "@php tests/component-scaffolding.php",
     "test:elementals-harness": "@php tests/elementals-harness-safety.php",
     "test:agent-docs": "@php tests/agent-docs.php",
     "test:maintainers": [

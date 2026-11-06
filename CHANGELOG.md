@@ -1,5 +1,21 @@
 # Changelog
 
+## 1.5.6 (2026-11-06)
+
+- Clarify component reinstallation as incoming-file scaffolding, not an automatic
+  retirement-aware upgrade. Document active retired PHP, manual reconciliation,
+  current versus backed-up receipts and the limits of install backups.
+- Add synthetic old/new component contract tests, including edited/custom files,
+  loader effects, incoming conflicts, dry runs and named-backup restoration.
+  Exercise the public CLI's cancellation/force boundaries and JSON build-failure
+  reporting with an isolated npm double and explicit backup recovery.
+- Refine animation guidance and asset/validation skills: historical `entered`
+  state is not current intersection, including dynamic siblings in completed
+  and still-running groups. Existing projects must explicitly port the starter's
+  project-owned runtime fix and rebuild; core/docs updates do not install it.
+- Advance only changed guide/skill versions. Shared core, UI profiles and
+  project version defaults remain unchanged.
+
 ## 1.5.5 (2026-11-06)
 
 - Document the starter's corrected animation reveal lifecycle: hide only after

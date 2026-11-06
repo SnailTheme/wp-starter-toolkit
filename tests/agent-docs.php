@@ -176,7 +176,7 @@ try {
 	$repeat = $installer->install( $theme );
 	agent_docs_assert( $before === agent_docs_snapshot( $theme->path ) && array( 'skip' ) === array_values( array_unique( array_column( $repeat['changes'], 'action' ) ) ), 'Equal-version repeat install did not skip docs/ignore rules.' );
 	$animationGuide = (string) file_get_contents( $theme->resolve( '.agents/animations.md' ) );
-	foreach ( array( 'window.stWpReveal?.init(subtree)', 'beforePaint: true', 'window.stWpReveal?.destroy(subtree)', '30 seconds', '10 seconds', 'Missing CSS/JavaScript', 'already-displayed content', 'Updating toolkit core or agent docs does not install this asset fix.' ) as $contract ) {
+	foreach ( array( 'window.stWpReveal?.init(subtree)', 'beforePaint: true', 'window.stWpReveal?.destroy(subtree)', '30 seconds', '10 seconds', 'Missing CSS/JavaScript', 'already-displayed content', 'historical compatibility state', 'fresh intersection result', 'Updating toolkit core or agent docs does not install this asset fix.' ) as $contract ) {
 		agent_docs_assert( str_contains( $animationGuide, $contract ), 'Animation guidance lost a lifecycle/ownership safeguard: ' . $contract );
 	}
 	$animationUpgrade = agent_docs_theme( $temp . '/animation-guide-upgrade' );
@@ -193,6 +193,30 @@ try {
 		$change = array_values( array_filter( $animationResult['changes'], static fn ( array $change ): bool => $change['path'] === $relative ) );
 		agent_docs_assert( 1 === count( $change ) && 'update' === $change[0]['action'], 'Previous animation guide was not updated: ' . $relative );
 		agent_docs_assert( file_get_contents( $animationUpgrade->resolve( $relative ) ) === file_get_contents( $theme->resolve( $relative ) ), 'Upgraded animation guidance differs from a fresh installation: ' . $relative );
+	}
+	$componentGuide = (string) file_get_contents( $theme->resolve( '.agents/cli_and_toolkit.md' ) );
+	foreach ( array( 'not a reconciled upgrade', 'Old PHP under', 'incoming files only' ) as $contract ) {
+		agent_docs_assert( str_contains( $componentGuide, $contract ), 'Component guidance lost the scaffold/migration boundary: ' . $contract );
+	}
+	$updatesGuide = (string) file_get_contents( $theme->resolve( '.agents/updates_and_releases.md' ) );
+	agent_docs_assert( 1 === substr_count( $updatesGuide, '## Component Migration' ) && 1 === substr_count( $updatesGuide, '## Starter Maintainer Release' ), 'Migration/release sections are missing or duplicated.' );
+	agent_docs_assert( str_contains( $updatesGuide, 'stylesheet/functions.php/npm defaults at 1.0.0' ), 'Upstream release guidance must not bump project-owned defaults.' );
+	$released155 = agent_docs_theme( $temp . '/guidance-from-155' );
+	$released155Versions = array(
+		'.agents/animations.md' => '1.0.1',
+		'.agents/skills/wp-starter-assets/SKILL.md' => '1.0.3',
+		'.agents/skills/wp-starter-validation/SKILL.md' => '1.1.3',
+		'.agents/cli_and_toolkit.md' => '1.3.2',
+		'.agents/updates_and_releases.md' => '1.0.0',
+		'.agents/skills/wp-starter-toolkit/SKILL.md' => '1.0.2',
+	);
+	foreach ( $released155Versions as $relative => $version ) {
+		$fs->dumpFile( $released155->resolve( $relative ), "<!-- st-toolkit-agent-doc-version: $version -->\nPrevious released guidance\n" );
+	}
+	$from155 = array_column( $installer->install( $released155 )['changes'], null, 'path' );
+	foreach ( $released155Versions as $relative => $version ) {
+		agent_docs_assert( 'update' === $from155[ $relative ]['action'], 'Released 1.5.5 guidance did not update normally: ' . $relative );
+		agent_docs_assert( file_get_contents( $theme->resolve( $relative ) ) === file_get_contents( $released155->resolve( $relative ) ), 'Released 1.5.5 guidance differs after normal update: ' . $relative );
 	}
 	if ( null !== ( new ExecutableFinder() )->find( 'git' ) ) {
 		$fs->dumpFile( $temp . '/empty-global-ignore', '' );

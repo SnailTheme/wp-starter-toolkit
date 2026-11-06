@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.0 -->
+<!-- st-toolkit-agent-doc-version: 1.0.1 -->
 # Updates And Releases
 
 ## Pick The Update Boundary
@@ -101,6 +101,29 @@ runtime checks. Use `npm ci` for a reproducible existing npm lockfile. Audit
 dependencies and report remaining gaps. Commit lockfile and copied/generated
 changes only when authorized; keep local guidance ignored.
 
+## Component Migration
+
+Components become editable project scaffolding. Reinstallation writes only the
+incoming package paths and records their checksums; it is not a three-way merge
+or retirement-aware upgrade. `--force` permits replacing incoming conflicts after
+backup, not deleting old project files. A renamed PHP integration can coexist
+with its old path, and both can run through recursive component discovery.
+
+Before reinstallation, preserve a complete project baseline and the current
+component receipt. Compare that inventory and installed code with the incoming
+package/dry run. Decide explicitly how to move customizations, retire obsolete
+hooks/files, and preserve unrelated integrations. Review the resulting diff,
+build and test the relevant frontend behavior before deploying. Do not narrow
+the loader to receipt-listed files or delete all unmatched PHP.
+
+The live component receipt describes the latest installed package, not every
+surviving project file. The install backup retains the previous receipt and
+affected incoming destinations, but not all retired or unrelated files. Inspect
+its metadata and use the independent project baseline for complete recovery;
+core rollback does not restore a component migration. If historical inventories
+are unavailable, inspect the versioned package and project history instead of
+assuming the current receipt proves an old integration is safe to delete.
+
 ## Starter Maintainer Release
 
 This section applies only when working on the starter repositories, not a
@@ -115,10 +138,11 @@ generated client project. Read the repository's own branch/release rules first.
   after ownership/API review. Export/verify approved UI sources with the
   maintainer tools in a toolkit Git checkout. Test fresh installation, not
   just resource equality. Inspect [CLI and toolkit](cli_and_toolkit.md).
-- Track toolkit CLI, theme stylesheet/npm, shared core, UI profile and individual
-  guide versions independently. Bump only what changed, with matching `@since`
-  for new APIs. Changed guides need matching file-version markers/manifest
-  entries so normal docs updates deliver them. A docs-only change does not
+- Keep starter project stylesheet/functions.php/npm defaults at 1.0.0 for the
+  generated project's developer to maintain. Track toolkit CLI, shared core,
+  UI profile and individual guide versions independently. Bump only what changed,
+  with matching `@since` for new APIs. Changed guides need matching file-version
+  markers/manifest entries so normal docs updates deliver them. A docs-only change does not
   imply a new core/profile version.
 - Validate toolkit tests and fresh generated-theme installs. Publish the
   toolkit through its approved merge/tag first; only then update clean theme

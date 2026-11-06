@@ -1,4 +1,4 @@
-<!-- st-toolkit-agent-doc-version: 1.0.1 -->
+<!-- st-toolkit-agent-doc-version: 1.0.2 -->
 # AnimateCSS
 
 ## Ownership And Activation
@@ -79,6 +79,10 @@ every chosen animation class has its corresponding module enabled.
   entrance. Off-screen content can still be armed normally.
 - Observation uses the viewport without the old negative bottom margin, so
   short viewports and content near the page bottom can intersect.
+- `entered` is historical compatibility state, not proof of current visibility.
+  New children request a fresh intersection result once per wrapper/batch,
+  including when a running group is already observed. Do not start later
+  siblings immediately because their wrapper entered the viewport earlier.
 
 After inserting content, initialize that subtree explicitly:
 
