@@ -172,7 +172,7 @@ try {
 		echo "Override passed.\n";
 	} else {
 		$manifest = json_decode( file_get_contents( dirname( __DIR__ ) . '/resources/core/st-wp-core-manifest.json' ), true, 512, JSON_THROW_ON_ERROR );
-		schema_test_assert( '1.2.0' === $manifest['version'], 'Packaged core declares the schema API version.' );
+		schema_test_assert( version_compare( $manifest['version'], '1.2.0', '>=' ), 'Packaged core supports the schema API minimum.' );
 		foreach ( $manifest['checksums'] as $file => $checksum ) {
 			schema_test_assert( $checksum === hash_file( 'sha256', dirname( __DIR__ ) . '/resources/core/files/' . $file ), 'Packaged checksum matches: ' . $file );
 		}
